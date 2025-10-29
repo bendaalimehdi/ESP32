@@ -1,5 +1,5 @@
 #pragma once
-#include <Adafruit_NeoPixel.h> // Ajout de la bibliothèque
+#include <Adafruit_NeoPixel.h> 
 
 enum class LedState {
     IDLE,
@@ -9,17 +9,17 @@ enum class LedState {
 
 class Actuator {
 public:
-    // Le constructeur prend le pin, la luminosité, et le seuil
+  
     Actuator(uint8_t pin, uint8_t brightness, float humidity_threshold);
     
     void begin();
     void update(); 
     void showSearching();
     void showConnected();
-    void showStatus(float humidity); // Affiche Rouge ou Vert
+    void showStatus(float humidity); 
 
 private:
-    //uint8_t ledPin; // Supprimé, géré par l'objet pixel
+    
     uint8_t brightness; 
     float humidity_threshold; 
     
@@ -28,8 +28,7 @@ private:
     unsigned long lastBlinkTime;
     bool blinkState;
 
-    Adafruit_NeoPixel pixel; // Objet NeoPixel
+    Adafruit_NeoPixel pixel;
     
-    // La méthode interne utilise maintenant les codes de couleur NeoPixel (uint32_t)
     void setColor(uint32_t color); 
 };

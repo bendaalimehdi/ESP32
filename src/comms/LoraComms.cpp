@@ -28,12 +28,12 @@ void LoraComms::registerRecvCallback(DataRecvCallback cb) {
     this->onDataReceived = cb;
 }
 
-// MODIFIÉ: Accepte data et len
+
 bool LoraComms::sendData(uint8_t destAddress, const uint8_t* data, int len) {
     LoRa.beginPacket();
     LoRa.write(destAddress);
     LoRa.write(this->localAddress);
-    LoRa.write(data, len); // Envoie le buffer brut
+    LoRa.write(data, len); 
     return LoRa.endPacket(); 
 }
 
@@ -47,18 +47,17 @@ void LoraComms::onDataRecv_static(int packetSize) {
     }
 }
 
-// MODIFIÉ: Gère un payload de taille variable
+
 void LoraComms::handleDataRecv(int packetSize) {
-    // Un paquet doit contenir au moins les 2 octets d'en-tête
+
     if (packetSize <= 2) return;
 
-    // int expectedSize = sizeof(MessageData) + 2; // SUPPRIMÉ
-    // if (packetSize != expectedSize) { ... } // SUPPRIMÉ
+
     
     uint8_t destAddress = LoRa.read();
     uint8_t fromAddress = LoRa.read();
     
-    // Calcule la taille réelle du payload (JSON)
+
     int payloadSize = packetSize - 2;
 
     if (destAddress != this->localAddress && destAddress != 0xFF) {
@@ -71,21 +70,21 @@ void LoraComms::handleDataRecv(int packetSize) {
     }
     
   
-    // Nous utilisons MAX_PAYLOAD_SIZE pour éviter un débordement
+   
     uint8_t buffer[MAX_PAYLOAD_SIZE];
     
     if (payloadSize > MAX_PAYLOAD_SIZE) {
         Serial.println("Erreur: Paquet LoRa trop grand !");
-        while(LoRa.available()) LoRa.read(); // Vide le buffer
+        while(LoRa.available()) LoRa.read();
         startReceiving();
         return;
     }
 
-    // Lire le payload (la chaîne JSON)
+
     LoRa.readBytes(buffer, payloadSize);
 
     if (onDataReceived) {
-        // MODIFIÉ: Passe le buffer brut et sa longueur
+    
         onDataReceived(buffer, payloadSize, fromAddress);
     }
     

@@ -1,5 +1,5 @@
 #include "CommManager.h"
-#include <Arduino.h> // Pour strlen
+#include <Arduino.h> 
 
 CommManager::CommManager(uint8_t loraLocalAddr) 
     : espNow(), 
@@ -10,23 +10,20 @@ CommManager::CommManager(uint8_t loraLocalAddr)
       userRecvCallback(nullptr),
       userSendCallback(nullptr) {}
 
-// MODIFIÉ: Implémentation de la nouvelle signature begin()
+
 bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster) {
     
     // 1. Stocker les adresses des pairs
     this->espnowPeerMac = netConfig.master_mac_bytes;
     if (isMaster) {
-        // Si je suis le Master, mon pair est le Follower
         this->loraPeerAddress = netConfig.lora_follower_addr;
     } else {
-        // Si je suis le Follower, mon pair est le Master
         this->loraPeerAddress = netConfig.lora_master_addr;
     }
 
     // --- 2. Tenter ESP-NOW ---
     if (espNow.begin()) {
         Serial.println("CommManager: ESP-NOW initialisé avec succès.");
-        // (La correction pour éviter le crash sur nullptr est toujours là)
         if (this->espnowPeerMac != nullptr) {
             espNow.addPeer(this->espnowPeerMac);
         }
@@ -72,13 +69,11 @@ void CommManager::registerSendCallback(SendStatusCallback cb) {
     this->userSendCallback = cb;
 }
 
-// MODIFIÉ: Accepte une chaîne JSON
+
 bool CommManager::sendData(const char* jsonData) {
-    // Convertit la chaîne en buffer brut et obtient sa longueur
     const uint8_t* data = (const uint8_t*)jsonData;
     int len = strlen(jsonData); 
     
-    // Vérifie si le payload n'est pas trop grand
     if (len > MAX_PAYLOAD_SIZE) {
         Serial.println("Erreur: Payload JSON trop grand pour être envoyé !");
         return false;
@@ -102,16 +97,15 @@ bool CommManager::sendData(const char* jsonData) {
     }
 }
 
-// --- Fonctions de relai (interne) ---
 
-// MODIFIÉ: Accepte (mac, data, len)
+
 void CommManager::onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len) {
     if (userRecvCallback) {
         SenderInfo sender = {};
         sender.mode = CommMode::ESP_NOW;
         sender.macAddress = mac;
         sender.loraAddress = 0;
-        userRecvCallback(sender, data, len); // Transférer au Master
+        userRecvCallback(sender, data, len); 
     }
 }
 
@@ -121,13 +115,11 @@ void CommManager::onEspNowSendStatus(bool success) {
     }
 }
 
-// MODIFIÉ: Accepte (data, len, from)
 void CommManager::onLoraDataRecv(const uint8_t* data, int len, uint8_t from) {
     if (userRecvCallback) {
         SenderInfo sender = {};
         sender.mode = CommMode::LORA;
         sender.macAddress = nullptr;
         sender.loraAddress = from;
-        userRecvCallback(sender, data, len); // Transférer au Master
-    }
+        userRecvCallback(sender, data, len); 
 }

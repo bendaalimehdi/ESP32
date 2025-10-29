@@ -43,9 +43,9 @@ void ESPNowComms::addPeer(const uint8_t* mac_addr) {
     }
 }
 
-// MODIFIÉ: Accepte data et len
+
 bool ESPNowComms::sendData(const uint8_t* mac_addr, const uint8_t* data, int len) {
-    esp_err_t result = esp_now_send(mac_addr, data, len); // Utilise len
+    esp_err_t result = esp_now_send(mac_addr, data, len); 
     return (result == ESP_OK);
 }
 
@@ -63,17 +63,12 @@ void ESPNowComms::onDataSent_static(const uint8_t* mac, esp_now_send_status_t st
     }
 }
 
-// MODIFIÉ: Ne désérialise plus, passe le buffer brut au callback
 void ESPNowComms::handleDataRecv(const uint8_t* mac, const uint8_t* incomingData, int len) {
-    // if (len == sizeof(MessageData)) { // SUPPRIMÉ
-    //     MessageData data; // SUPPRIMÉ
-    //     memcpy(&data, incomingData, sizeof(data)); // SUPPRIMÉ
+
         
         if (onDataReceived) {
-            // MODIFIÉ: Passe le buffer brut et sa longueur
             onDataReceived(mac, incomingData, len);
         }
-    // } // SUPPRIMÉ
 }
 
 void ESPNowComms::handleDataSent(const uint8_t* mac, esp_now_send_status_t status) {

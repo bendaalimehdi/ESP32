@@ -1,31 +1,30 @@
 #include "Actuator.h"
 
-// Définition des couleurs (Rouge, Vert, Bleu) pour NeoPixel
-// Vous pouvez ajuster la luminosité de chaque couleur ici (ex: 0x550000 pour un rouge faible)
+
 #define COLOR_RED     0xAA0000
 #define COLOR_GREEN   0x00AA00
 #define COLOR_BLUE    0x0000AA
 #define COLOR_OFF     0x000000
 
-// MODIFIÉ: Le constructeur initialise l'objet 'pixel' et stocke les configs
+
 Actuator::Actuator(uint8_t pin, uint8_t brightness, float humidity_threshold) 
-    : brightness(brightness), // Stocke la luminosité
-      humidity_threshold(humidity_threshold), // Stocke le seuil
+    : brightness(brightness), 
+      humidity_threshold(humidity_threshold), 
       currentState(LedState::SEARCHING),
       stateStartTime(0),
       lastBlinkTime(0),
       blinkState(false),
-      pixel(1, pin, NEO_GRB + NEO_KHZ800) // Initialise l'objet NeoPixel
+      pixel(1, pin, NEO_GRB + NEO_KHZ800) 
 {}
 
 void Actuator::begin() {
-    pixel.begin(); // Démarre le pixel
-    pixel.setBrightness(brightness); // Utilise la luminosité de la config
-    pixel.show(); // Initialise le pixel (éteint)
+    pixel.begin(); 
+    pixel.setBrightness(brightness); 
+    pixel.show(); 
     stateStartTime = millis();
 }
 
-// MODIFIÉ: Implémente la fonction pour NeoPixel
+
 void Actuator::setColor(uint32_t color) {
     pixel.setPixelColor(0, color);
     pixel.show();
@@ -36,7 +35,7 @@ void Actuator::update() {
 
     switch (currentState) {
         case LedState::SEARCHING:
-            // Clignotement bleu rapide
+          
             if (now - lastBlinkTime > 100) {
                 lastBlinkTime = now;
                 blinkState = !blinkState;
@@ -45,21 +44,21 @@ void Actuator::update() {
             break;
 
         case LedState::CONNECTED:
-            // Clignotement vert rapide
+          
             if (now - lastBlinkTime > 100) {
                 lastBlinkTime = now;
                 blinkState = !blinkState;
                 setColor(blinkState ? COLOR_GREEN : COLOR_OFF);
             }
-            // Après 20 secondes, repasser en mode IDLE
+           
             if (now - stateStartTime > 20000) {
                 currentState = LedState::IDLE;
-                // La couleur sera définie par le prochain appel à showStatus()
+           
             }
             break;
 
         case LedState::IDLE:
-            // Ne fait rien. La couleur est gérée par showStatus()
+          
             break;
     }
 }
@@ -71,7 +70,7 @@ void Actuator::showSearching() {
 
 void Actuator::showConnected() {
     if (currentState == LedState::CONNECTED) {
-        stateStartTime = millis(); // Réinitialise le timer de 20s
+        stateStartTime = millis(); 
         return;
     }
     currentState = LedState::CONNECTED;
@@ -80,13 +79,13 @@ void Actuator::showConnected() {
 }
 
 void Actuator::showStatus(float humidity) {
-    // Ce statut n'est affiché que si la LED est en mode IDLE
+
     if (currentState == LedState::IDLE) {
-        // Utilise le seuil membre (stocké)
+       
         if (humidity > humidity_threshold) {
-            setColor(COLOR_GREEN); // Humide = Vert
+            setColor(COLOR_GREEN); 
         } else {
-            setColor(COLOR_RED);   // Sec = Rouge
+            setColor(COLOR_RED); 
         }
     }
 }

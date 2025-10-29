@@ -6,7 +6,7 @@
 
 class LoraComms {
 public:
-    // MODIFIÉ: Renvoie un buffer brut (data) et sa longueur (len)
+
     using DataRecvCallback = std::function<void(const uint8_t* data, int len, uint8_t from)>;
 
     LoraComms(uint8_t localAddress);
@@ -14,7 +14,6 @@ public:
     bool begin(long frequency, const LoraPins& pins, uint8_t syncWord);
     void registerRecvCallback(DataRecvCallback cb);
     
-    // MODIFIÉ: Envoie un buffer (data) d'une longueur (len)
     bool sendData(uint8_t destAddress, const uint8_t* data, int len);
     void startReceiving();
 

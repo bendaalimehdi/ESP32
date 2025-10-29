@@ -6,7 +6,7 @@
 
 class ESPNowComms {
 public:
-    // MODIFIÉ: Le callback envoie un buffer brut (data) et sa longueur (len)
+
     using DataRecvCallback = std::function<void(const uint8_t* mac_addr, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
@@ -18,7 +18,7 @@ public:
 
     void addPeer(const uint8_t* mac_addr);
     
-    // MODIFIÉ: Envoie un buffer de données (data) d'une longueur (len)
+
     bool sendData(const uint8_t* mac_addr, const uint8_t* data, int len);
 
 private:

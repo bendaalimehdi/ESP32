@@ -4,17 +4,17 @@
 Master::Master(const Config& config)
     : config(config),
       actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold),
-      comms(config.network.lora_master_addr), // Adresse LoRa de cet appareil
+      comms(config.network.lora_master_addr), 
       lastReceivedHumidity(0.0f) 
 {}
 
 void Master::begin() {
     actuator.begin();
     
-    // Démarre le CommManager avec les configs
+  
     comms.begin(config.network, config.pins, config.identity.isMaster);
     
-    // S'abonne aux réceptions
+
     comms.registerRecvCallback([this](const SenderInfo& sender, const uint8_t* data, int len) {
         this->onDataReceived(sender, data, len);
     });
@@ -26,11 +26,11 @@ void Master::begin() {
 void Master::update() {
     actuator.update();
     
-    // Affiche le statut (Rouge/Vert) basé sur la dernière donnée reçue
+  
     actuator.showStatus(lastReceivedHumidity);
 }
 
-// onDataReceived est INCHANGÉ (il fonctionnait déjà parfaitement)
+
 void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int len) {
     
     DeserializationError error = deserializeJson(jsonDoc, (const char*)data, len);

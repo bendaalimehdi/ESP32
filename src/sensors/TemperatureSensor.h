@@ -5,19 +5,19 @@
 class TemperatureSensor {
 public:
     /**
-     * @brief Constructeur.
-     * @param pin Le pin de données (DATA) du DHT22.
+     * @brief 
+     * @param pin 
      */
     TemperatureSensor(uint8_t pin);
     void begin();
     
     /**
-     * @brief Lit la température depuis le capteur.
-     * @return Température en Celsius, ou NAN en cas d'échec.
+     * @brief 
+     * @return 
      */
     float read(); 
 
 private:
     uint8_t sensorPin;
-    DHT dht; // L'objet de la bibliothèque DHT
+    DHT dht; 
 };

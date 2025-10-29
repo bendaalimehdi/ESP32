@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 
 Follower::Follower(const Config& config) 
-    : config(config), // Stocke la référence
+    : config(config), 
       actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold), 
       sensor(config.pins.soil_sensor, config.pins.soil_power, 
              config.calibration.soil_dry, config.calibration.soil_wet), 
@@ -38,22 +38,20 @@ void Follower::update() {
         float humidity = sensor.read();
         float temp = tempSensor.read(); 
 
-        // 2. Construire le document JSON
-        // Note: La taille doit venir de la config
-        StaticJsonDocument<250> doc; // Utilise une taille fixe (voir Bug 3)
+      
+        StaticJsonDocument<250> doc;
 
-        // --- CORRECTION ---
-        // Remplir l'objet "identity" depuis la config
+   
         doc["identity"]["farmId"] = config.identity.farmId;
         doc["identity"]["zoneId"] = config.identity.zoneId;
         doc["identity"]["nodeId"] = config.identity.nodeId;
         doc["identity"]["isMaster"] = config.identity.isMaster;
-        // --- FIN CORRECTION ---
+      
 
         doc["sensors"]["soilHumidity"] = round(humidity * 100.0) / 100.0;
         doc["sensors"]["temp"] = round(temp * 100.0) / 100.0;
         
-        char jsonString[250]; // Utilise une taille fixe
+        char jsonString[250]; 
         serializeJson(doc, jsonString, sizeof(jsonString));
         
         Serial.print("Envoi JSON: ");

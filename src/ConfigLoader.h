@@ -55,8 +55,8 @@ struct Config {
 };
 
 /**
- * @brief Charge le fichier /config.json depuis SPIFFS dans la structure config.
- * @param config L'objet Config à remplir.
- * @return true en cas de succès, false en cas d'échec.
+ * @brief 
+ * @param config 
+ * @return 
  */
 bool loadConfig(Config& config);

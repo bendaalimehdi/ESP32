@@ -23,7 +23,6 @@ public:
 
     CommManager(uint8_t loraLocalAddr);
 
-    // MODIFIÉ: Begin prend maintenant les configs
     bool begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster);
 
     void registerRecvCallback(DataRecvCallback cb);
@@ -43,7 +42,6 @@ private:
     DataRecvCallback userRecvCallback;
     SendStatusCallback userSendCallback;
 
-    // MODIFIÉ: Les callbacks internes reflètent les changements
     void onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len);
     void onEspNowSendStatus(bool success);
     void onLoraDataRecv(const uint8_t* data, int len, uint8_t from);

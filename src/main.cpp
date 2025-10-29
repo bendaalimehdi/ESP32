@@ -21,22 +21,18 @@ void setup() {
         while(1) delay(100);
     }
 
-    // ============ BLOC DE DIAGNOSTIC AJOUTÉ ============
-    Serial.println("--- Vérification SPIFFS ---");
+    
+   
     File root = SPIFFS.open("/");
     File file = root.openNextFile();
     if (!file) {
         Serial.println("ERREUR: Le système de fichiers SPIFFS est COMPLÈTEMENT VIDE.");
     }
     while(file){
-        Serial.print("  FICHIER: ");
-        Serial.print(file.name());
-        Serial.print("\tTAILLE: ");
-        Serial.println(file.size());
+        Serial.print("Fichier trouvé: ");
         file = root.openNextFile();
     }
-    Serial.println("--- Fin de la vérification ---");
-    // ====================================================
+ 
 
     // 4. Charger la config
     if (!loadConfig(g_config)) {
@@ -44,7 +40,7 @@ void setup() {
         while(1) delay(100); 
     }
     
-    // ... (le reste de votre setup) ...
+
     if (g_config.identity.isMaster) {
         Serial.println("Rôle (depuis config.json): MASTER. Initialisation...");
         g_master = new Master(g_config);
@@ -59,7 +55,6 @@ void setup() {
 }
 
 void loop() {
-    // ... (votre loop) ...
     if (g_master) {
         g_master->update();
     } else if (g_follower) {

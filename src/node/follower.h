@@ -8,7 +8,7 @@
 
 class Follower {
 public:
-    // Le constructeur prend la config en argument
+  
     Follower(const Config& config);
     void begin();
     void update();

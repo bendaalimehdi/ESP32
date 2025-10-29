@@ -1,12 +1,12 @@
 #pragma once
-#include <stdint.h> // Pour uint8_t
+#include <stdint.h> 
 
 /**
- * @brief Définit les pins GPIO pour le module LoRa.
+ * @brief 
  */
 struct LoraPins {
-    int cs;     // Chip Select
-    int reset;  // Reset
-    int irq;    // DIO0 (Interrupt Request)
+    int cs;     
+    int reset;  
+    int irq;    
 };
 
