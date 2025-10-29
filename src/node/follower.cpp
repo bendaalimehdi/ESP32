@@ -1,21 +1,23 @@
 #include "Follower.h"
 #include <Arduino.h>
-#include <ArduinoJson.h> // Ajouté
+#include <ArduinoJson.h>
 
-Follower::Follower() 
-    : actuator(PIN_NEOPIXEL),
-      sensor(PIN_SOIL_SENSOR, PIN_SOIL_POWER, SENSOR_DRY_VALUE, SENSOR_WET_VALUE), 
-      tempSensor(PIN_DHT22),
-      comms(LORA_FOLLOWER_ADDR), 
+Follower::Follower(const Config& config) 
+    : config(config), // Stocke la référence
+      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold), 
+      sensor(config.pins.soil_sensor, config.pins.soil_power, 
+             config.calibration.soil_dry, config.calibration.soil_wet), 
+      tempSensor(config.pins.dht11),
+      comms(config.network.lora_follower_addr),
       lastSendTime(0) 
-      {}
+{}
 
 void Follower::begin() {
     actuator.begin();
     sensor.begin();
     tempSensor.begin();
     
-    comms.begin(masterMacAddress, LORA_MASTER_ADDR);
+    comms.begin(config.network, config.pins, config.identity.isMaster);
     
     comms.registerSendCallback([this](bool success) {
         this->onDataSent(success);
@@ -33,35 +35,32 @@ void Follower::update() {
     if (now - lastSendTime > 5000) {
         lastSendTime = now;
         
-        // 1. Lire les capteurs
         float humidity = sensor.read();
         float temp = tempSensor.read(); 
 
         // 2. Construire le document JSON
-        StaticJsonDocument<MAX_PAYLOAD_SIZE> doc;
+        // Note: La taille doit venir de la config
+        StaticJsonDocument<250> doc; // Utilise une taille fixe (voir Bug 3)
 
-        // Remplir l'objet "identity" depuis Config.h
-        doc["identity"]["farmId"] = FARM_ID;
-        doc["identity"]["zoneId"] = ZONE_ID;
-        doc["identity"]["nodeId"] = NODE_ID;
-        doc["identity"]["isMaster"] = IS_MASTER_NODE;
+        // --- CORRECTION ---
+        // Remplir l'objet "identity" depuis la config
+        doc["identity"]["farmId"] = config.identity.farmId;
+        doc["identity"]["zoneId"] = config.identity.zoneId;
+        doc["identity"]["nodeId"] = config.identity.nodeId;
+        doc["identity"]["isMaster"] = config.identity.isMaster;
+        // --- FIN CORRECTION ---
 
-        // Remplir l'objet "sensors"
-        // Note : round() pour 2 chiffres après la virgule, propre
         doc["sensors"]["soilHumidity"] = round(humidity * 100.0) / 100.0;
         doc["sensors"]["temp"] = round(temp * 100.0) / 100.0;
         
-        // 3. Sérialiser le JSON dans une chaîne
-        char jsonString[MAX_PAYLOAD_SIZE];
+        char jsonString[250]; // Utilise une taille fixe
         serializeJson(doc, jsonString, sizeof(jsonString));
         
         Serial.print("Envoi JSON: ");
         Serial.println(jsonString);
 
-        // 4. Mettre à jour la LED locale
         actuator.showStatus(humidity);
 
-        // 5. Envoyer la chaîne JSON
         if (!comms.sendData(jsonString)) {
             Serial.println("Erreur d'envoi (file pleine?)");
             actuator.showSearching(); 

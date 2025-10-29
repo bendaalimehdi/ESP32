@@ -1,7 +1,7 @@
 #pragma once
 #include "comms/ESPNowComms.h"
 #include "comms/LoraComms.h"
-#include "Config.h" 
+#include "ConfigLoader.h"
 
 enum class CommMode {
     NONE,
@@ -18,17 +18,16 @@ struct SenderInfo {
 
 class CommManager {
 public:
-    // MODIFIÉ: Le callback reçoit un buffer brut (data) et sa longueur (len)
     using DataRecvCallback = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
     CommManager(uint8_t loraLocalAddr);
-    bool begin(const uint8_t* espnowPeerMac, uint8_t loraPeerAddr);
+
+    // MODIFIÉ: Begin prend maintenant les configs
+    bool begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster);
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
-    
-    // MODIFIÉ: Prend une chaîne JSON en entrée
     bool sendData(const char* jsonData);
     
     CommMode getActiveMode() const { return activeMode; }

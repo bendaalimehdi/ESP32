@@ -1,18 +1,20 @@
 #include "master.h"
 #include <Arduino.h>
-#include <ArduinoJson.h> // Ajouté
 
-Master::Master()
-    : actuator(PIN_NEOPIXEL),
-      comms(LORA_MASTER_ADDR),
-      lastReceivedHumidity(0.0f) {}
+Master::Master(const Config& config)
+    : config(config),
+      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold),
+      comms(config.network.lora_master_addr), // Adresse LoRa de cet appareil
+      lastReceivedHumidity(0.0f) 
+{}
 
 void Master::begin() {
     actuator.begin();
     
-    comms.begin(nullptr, LORA_FOLLOWER_ADDR);
+    // Démarre le CommManager avec les configs
+    comms.begin(config.network, config.pins, config.identity.isMaster);
     
-    // MODIFIÉ: La lambda accepte (sender, data, len)
+    // S'abonne aux réceptions
     comms.registerRecvCallback([this](const SenderInfo& sender, const uint8_t* data, int len) {
         this->onDataReceived(sender, data, len);
     });
@@ -23,14 +25,14 @@ void Master::begin() {
 
 void Master::update() {
     actuator.update();
+    
+    // Affiche le statut (Rouge/Vert) basé sur la dernière donnée reçue
     actuator.showStatus(lastReceivedHumidity);
 }
 
-// MODIFIÉ: Parse le JSON entrant
+// onDataReceived est INCHANGÉ (il fonctionnait déjà parfaitement)
 void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int len) {
     
-    // 1. Parser le JSON
-    // Nous castons data (uint8_t*) en (const char*)
     DeserializationError error = deserializeJson(jsonDoc, (const char*)data, len);
 
     if (error) {
@@ -39,12 +41,10 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
         return;
     }
 
-    // 2. Extraire les données
     float humidity = jsonDoc["sensors"]["soilHumidity"];
     float temp = jsonDoc["sensors"]["temp"];
-    const char* nodeId = jsonDoc["identity"]["nodeId"]; // Ex: "NODE_001"
+    const char* nodeId = jsonDoc["identity"]["nodeId"];
 
-    // 3. Afficher les données
     Serial.print("Données reçues de ");
     Serial.print(nodeId);
     Serial.print(": ");
@@ -53,7 +53,6 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
     Serial.print(temp);
     Serial.print("°C Temp. ");
 
-    // Affiche l'expéditeur (couche transport)
     if (sender.mode == CommMode::ESP_NOW) {
         Serial.print(" via [ESP-NOW]: ");
         for (int i = 0; i < 6; i++) {
@@ -68,7 +67,6 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
         Serial.println(sender.loraAddress, HEX);
     }
 
-    // 4. Mettre à jour l'état
     lastReceivedHumidity = humidity;
     actuator.showConnected(); 
 }

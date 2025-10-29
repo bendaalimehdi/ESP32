@@ -1,34 +1,35 @@
 #pragma once
-#include <Adafruit_NeoPixel.h>
-#include "Config.h"
+#include <Adafruit_NeoPixel.h> // Ajout de la bibliothèque
 
-// États de la LED
 enum class LedState {
-    IDLE,        // Ne fait rien (sera Rouge ou Vert fixe)
-    SEARCHING,   // Clignotement bleu rapide
-    CONNECTED    // Clignotement vert rapide (pour 20s)
+    IDLE,
+    SEARCHING,
+    CONNECTED
 };
 
 class Actuator {
 public:
-    Actuator(uint8_t pin);
-    void begin();
+    // Le constructeur prend le pin, la luminosité, et le seuil
+    Actuator(uint8_t pin, uint8_t brightness, float humidity_threshold);
     
-    // Fonction principale à appeler dans loop()
+    void begin();
     void update(); 
-
-    // Commandes de haut niveau
     void showSearching();
     void showConnected();
     void showStatus(float humidity); // Affiche Rouge ou Vert
 
 private:
-    Adafruit_NeoPixel pixel;
-    LedState currentState;
+    //uint8_t ledPin; // Supprimé, géré par l'objet pixel
+    uint8_t brightness; 
+    float humidity_threshold; 
     
+    LedState currentState;
     unsigned long stateStartTime;
     unsigned long lastBlinkTime;
     bool blinkState;
 
-    void setColor(uint32_t color);
+    Adafruit_NeoPixel pixel; // Objet NeoPixel
+    
+    // La méthode interne utilise maintenant les codes de couleur NeoPixel (uint32_t)
+    void setColor(uint32_t color); 
 };

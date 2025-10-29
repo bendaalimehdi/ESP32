@@ -1,0 +1,32 @@
+{
+  "identity": {
+    "farmId": "FARM001",
+    "zoneId": "ZONE001",
+    "nodeId": "NODE_HUMIDITE_01",
+    "isMaster": false
+  },
+  "pins": {
+    "led": 33,
+    "led_brightness": 30,
+    "soil_sensor": 2,
+    "soil_power": 1,
+    "dht11": 12,
+    "lora_cs": 10,
+    "lora_reset": 9,
+    "lora_irq": 2
+  },
+  "calibration": {
+    "soil_dry": 3100,
+    "soil_wet": 1200
+  },
+  "network": {
+    "master_mac": "80:B5:4E:C3:23:CC",
+    "lora_freq": 868000000,
+    "lora_sync_word": 18,
+    "lora_master_addr": 1,
+    "lora_follower_addr": 2
+  },
+  "logic": {
+    "humidity_threshold": 50.0
+  }
+}

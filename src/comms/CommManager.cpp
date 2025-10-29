@@ -10,43 +10,55 @@ CommManager::CommManager(uint8_t loraLocalAddr)
       userRecvCallback(nullptr),
       userSendCallback(nullptr) {}
 
-bool CommManager::begin(const uint8_t* espnowPeerMac, uint8_t loraPeerAddr) {
-    this->espnowPeerMac = espnowPeerMac;
-    this->loraPeerAddress = loraPeerAddr;
+// MODIFIÉ: Implémentation de la nouvelle signature begin()
+bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster) {
+    
+    // 1. Stocker les adresses des pairs
+    this->espnowPeerMac = netConfig.master_mac_bytes;
+    if (isMaster) {
+        // Si je suis le Master, mon pair est le Follower
+        this->loraPeerAddress = netConfig.lora_follower_addr;
+    } else {
+        // Si je suis le Follower, mon pair est le Master
+        this->loraPeerAddress = netConfig.lora_master_addr;
+    }
 
-    // --- 1. Tenter ESP-NOW ---
+    // --- 2. Tenter ESP-NOW ---
     if (espNow.begin()) {
         Serial.println("CommManager: ESP-NOW initialisé avec succès.");
+        // (La correction pour éviter le crash sur nullptr est toujours là)
         if (this->espnowPeerMac != nullptr) {
             espNow.addPeer(this->espnowPeerMac);
         }
         
-        // MODIFIÉ: La lambda accepte (mac, data, len)
-        espNow.registerRecvCallback([this](const uint8_t* mac, const uint8_t* d, int l){ 
-            this->onEspNowDataRecv(mac, d, l); 
-        });
+        espNow.registerRecvCallback([this](const uint8_t* mac, const uint8_t* d, int l){ this->onEspNowDataRecv(mac, d, l); });
         espNow.registerSendCallback([this](bool s){ this->onEspNowSendStatus(s); });
         
         this->activeMode = CommMode::ESP_NOW;
         return true;
     }
 
-    // --- 2. Échec d'ESP-NOW, tenter LoRa ---
+    // --- 3. Échec d'ESP-NOW, tenter LoRa ---
     Serial.println("CommManager: ESP-NOW a échoué. Tentative avec LoRa...");
     
-    if (lora.begin(LORA_FREQ, LORA_PINS, LORA_SYNC_WORD)) {
+    // Créer la structure LoraPins à partir de ConfigPins
+    LoraPins loraPins = {
+        .cs = pinConfig.lora_cs,
+        .reset = pinConfig.lora_reset,
+        .irq = pinConfig.lora_irq
+    };
+    
+    // Utilise les valeurs de la config
+    if (lora.begin(netConfig.lora_freq, loraPins, netConfig.lora_sync_word)) {
         Serial.println("CommManager: LoRa initialisé avec succès.");
         
-        // MODIFIÉ: La lambda accepte (data, len, from)
-        lora.registerRecvCallback([this](const uint8_t* d, int l, uint8_t f){ 
-            this->onLoraDataRecv(d, l, f); 
-        });
+        lora.registerRecvCallback([this](const uint8_t* d, int l, uint8_t f){ this->onLoraDataRecv(d, l, f); });
         
         this->activeMode = CommMode::LORA;
         return true;
     }
 
-    // --- 3. Échec des deux ---
+    // --- 4. Échec des deux ---
     Serial.println("CommManager: Échec de l'initialisation des deux systèmes !");
     this->activeMode = CommMode::NONE;
     return false;

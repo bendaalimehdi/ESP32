@@ -1,6 +1,8 @@
 #include "LoraComms.h"
 #include <Arduino.h>
-#include "Config.h" // Pour MAX_PAYLOAD_SIZE
+#include "Config.h" 
+
+#define MAX_PAYLOAD_SIZE 250
 
 LoraComms* LoraComms::instance = nullptr;
 
@@ -68,7 +70,7 @@ void LoraComms::handleDataRecv(int packetSize) {
         return; 
     }
     
-    // Crée un buffer pour lire le payload
+  
     // Nous utilisons MAX_PAYLOAD_SIZE pour éviter un débordement
     uint8_t buffer[MAX_PAYLOAD_SIZE];
     
