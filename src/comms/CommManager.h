@@ -21,13 +21,14 @@ public:
     using DataRecvCallback = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
-    CommManager(uint8_t loraLocalAddr);
+    CommManager(); // Constructeur mis à jour
 
     bool begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster);
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
     bool sendData(const char* jsonData);
+    void update();
     
     CommMode getActiveMode() const { return activeMode; }
 
@@ -37,12 +38,12 @@ private:
     CommMode activeMode;
 
     const uint8_t* espnowPeerMac;
-    uint8_t loraPeerAddress;
+    uint16_t loraPeerAddress; 
 
     DataRecvCallback userRecvCallback;
     SendStatusCallback userSendCallback;
 
     void onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len);
     void onEspNowSendStatus(bool success);
-    void onLoraDataRecv(const uint8_t* data, int len, uint8_t from);
+    void onLoraDataRecv(const uint8_t* data, int len, uint16_t from); 
 };

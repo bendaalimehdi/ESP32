@@ -43,9 +43,11 @@ bool loadConfig(Config& config) {
     config.pins.soil_sensor = doc["pins"]["soil_sensor"];
     config.pins.soil_power = doc["pins"]["soil_power"];
     config.pins.dht11 = doc["pins"]["dht11"];
-    config.pins.lora_cs = doc["pins"]["lora_cs"];
-    config.pins.lora_reset = doc["pins"]["lora_reset"];
-    config.pins.lora_irq = doc["pins"]["lora_irq"];
+    config.pins.lora_m0 = doc["pins"]["lora_m0"];
+    config.pins.lora_m1 = doc["pins"]["lora_m1"];
+    config.pins.lora_aux = doc["pins"]["lora_aux"];
+    config.pins.lora_rx = doc["pins"]["lora_rx"];
+    config.pins.lora_tx = doc["pins"]["lora_tx"];
 
 
     config.calibration.soil_dry = doc["calibration"]["soil_dry"];
@@ -53,10 +55,11 @@ bool loadConfig(Config& config) {
 
    
     config.network.master_mac_str = doc["network"]["master_mac"] | "00:00:00:00:00:00";
-    config.network.lora_freq = doc["network"]["lora_freq"];
-    config.network.lora_sync_word = doc["network"]["lora_sync_word"];
-    config.network.lora_master_addr = doc["network"]["lora_master_addr"];
-    config.network.lora_follower_addr = doc["network"]["lora_follower_addr"];
+    config.network.enableESPNow = doc["network"]["enableESPNow"] | true;  
+    config.network.enableLora = doc["network"]["enableLora"] | true;    
+    config.network.lora_node_addr = doc["network"]["lora_node_addr"] | 1;
+    config.network.lora_peer_addr = doc["network"]["lora_peer_addr"] | 2;
+    config.network.lora_channel = doc["network"]["lora_channel"] | 23;
 
   
     config.logic.humidity_threshold = doc["logic"]["humidity_threshold"];

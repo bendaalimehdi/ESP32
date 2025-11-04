@@ -8,7 +8,7 @@ Follower::Follower(const Config& config)
       sensor(config.pins.soil_sensor, config.pins.soil_power, 
              config.calibration.soil_dry, config.calibration.soil_wet), 
       tempSensor(config.pins.dht11),
-      comms(config.network.lora_follower_addr),
+      comms(),
       lastSendTime(0) 
 {}
 
@@ -74,4 +74,8 @@ void Follower::onDataSent(bool success) {
         Serial.println("Envoi Échoué");
         actuator.showSearching();
     }
+}
+
+CommManager* Follower::getCommManager() {
+    return &comms; // Renvoie un pointeur vers l'objet comms
 }

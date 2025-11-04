@@ -10,6 +10,8 @@ public:
     void begin();
     void update();
 
+    CommManager* getCommManager();
+
 private:
     const Config& config; 
 

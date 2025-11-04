@@ -4,7 +4,7 @@
 Master::Master(const Config& config)
     : config(config),
       actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold),
-      comms(config.network.lora_master_addr), 
+      comms(), 
       lastReceivedHumidity(0.0f) 
 {}
 
@@ -69,4 +69,8 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
 
     lastReceivedHumidity = humidity;
     actuator.showConnected(); 
+}
+
+CommManager* Master::getCommManager() {
+    return &comms; // Renvoie un pointeur vers l'objet comms
 }

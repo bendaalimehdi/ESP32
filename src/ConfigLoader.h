@@ -10,9 +10,11 @@ struct ConfigPins {
     uint8_t soil_sensor;
     uint8_t soil_power;
     uint8_t dht11;
-    uint8_t lora_cs;
-    uint8_t lora_reset;
-    uint8_t lora_irq;
+    uint8_t lora_m0;
+    uint8_t lora_m1;
+    uint8_t lora_aux;
+    uint8_t lora_rx;
+    uint8_t lora_tx;
 };
 
 // Structure pour l'identité
@@ -32,11 +34,12 @@ struct ConfigCalibration {
 // Structure pour le réseau
 struct ConfigNetwork {
     String master_mac_str;
-    uint8_t master_mac_bytes[6]; // L'adresse MAC parsée
-    long lora_freq;
-    uint8_t lora_sync_word;
-    uint8_t lora_master_addr;
-    uint8_t lora_follower_addr;
+    uint8_t master_mac_bytes[6]; 
+    bool enableESPNow;          
+    bool enableLora;            
+    uint16_t lora_node_addr; 
+    uint16_t lora_peer_addr;
+    uint8_t  lora_channel;
 };
 
 // Structure pour la logique

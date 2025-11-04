@@ -1,9 +1,10 @@
 #include "CommManager.h"
-#include <Arduino.h> 
+#include <Arduino.h> // Pour Serial et Serial2
 
-CommManager::CommManager(uint8_t loraLocalAddr) 
+// Constructeur mis à jour pour initialiser lora(Serial2)
+CommManager::CommManager() 
     : espNow(), 
-      lora(loraLocalAddr),
+      lora(Serial2), // Initialise le pilote LoRa Ebyte avec Serial2
       activeMode(CommMode::NONE),
       espnowPeerMac(nullptr),
       loraPeerAddress(0),
@@ -13,48 +14,50 @@ CommManager::CommManager(uint8_t loraLocalAddr)
 
 bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster) {
     
-    // 1. Stocker les adresses des pairs
+    // 1. Stocker l'adresse du pair
     this->espnowPeerMac = netConfig.master_mac_bytes;
-    if (isMaster) {
-        this->loraPeerAddress = netConfig.lora_follower_addr;
-    } else {
-        this->loraPeerAddress = netConfig.lora_master_addr;
-    }
-
-    // --- 2. Tenter ESP-NOW ---
-    if (espNow.begin()) {
-        Serial.println("CommManager: ESP-NOW initialisé avec succès.");
-        if (this->espnowPeerMac != nullptr) {
-            espNow.addPeer(this->espnowPeerMac);
+    this->loraPeerAddress = netConfig.lora_peer_addr; // Utilise l'adresse 16 bits du pair
+    
+    // --- 2. Tenter ESP-NOW (logique inchangée) ---
+    if (netConfig.enableESPNow) {
+        Serial.println("CommManager: Tentative d'initialisation d'ESP-NOW...");
+        if (espNow.begin()) {
+            Serial.println("CommManager: ESP-NOW initialisé avec succès.");
+            if (this->espnowPeerMac != nullptr) {
+                espNow.addPeer(this->espnowPeerMac);
+            }
+            
+            espNow.registerRecvCallback([this](const uint8_t* mac, const uint8_t* d, int l){ this->onEspNowDataRecv(mac, d, l); });
+            espNow.registerSendCallback([this](bool s){ this->onEspNowSendStatus(s); });
+            
+            this->activeMode = CommMode::ESP_NOW;
+            return true;
+        } else {
+             Serial.println("CommManager: ESP-NOW activé, mais l'initialisation a échoué.");
         }
-        
-        espNow.registerRecvCallback([this](const uint8_t* mac, const uint8_t* d, int l){ this->onEspNowDataRecv(mac, d, l); });
-        espNow.registerSendCallback([this](bool s){ this->onEspNowSendStatus(s); });
-        
-        this->activeMode = CommMode::ESP_NOW;
-        return true;
+    } else {
+        Serial.println("CommManager: ESP-NOW désactivé dans la configuration.");
     }
 
     // --- 3. Échec d'ESP-NOW, tenter LoRa ---
-    Serial.println("CommManager: ESP-NOW a échoué. Tentative avec LoRa...");
-    
-    // Créer la structure LoraPins à partir de ConfigPins
-    LoraPins loraPins = {
-        .cs = pinConfig.lora_cs,
-        .reset = pinConfig.lora_reset,
-        .irq = pinConfig.lora_irq
-    };
-    
-    // Utilise les valeurs de la config
-    if (lora.begin(netConfig.lora_freq, loraPins, netConfig.lora_sync_word)) {
-        Serial.println("CommManager: LoRa initialisé avec succès.");
+    if (netConfig.enableLora) { 
+        Serial.println("CommManager: Tentative avec LoRa (Ebyte UART)...");
         
-        lora.registerRecvCallback([this](const uint8_t* d, int l, uint8_t f){ this->onLoraDataRecv(d, l, f); });
-        
-        this->activeMode = CommMode::LORA;
-        return true;
+        // L'appel à begin() pour le pilote Ebyte est différent
+        if (lora.begin(pinConfig, netConfig)) {
+            Serial.println("CommManager: LoRa initialisé avec succès.");
+            
+            lora.registerRecvCallback([this](const uint8_t* d, int l, uint16_t f){ this->onLoraDataRecv(d, l, f); });
+            
+            this->activeMode = CommMode::LORA;
+            return true;
+        } else {
+            Serial.println("CommManager: LoRa activé, mais l'initialisation a échoué.");
+        }
+    } else {
+         Serial.println("CommManager: LoRa désactivé dans la configuration.");
     }
-
+    
     // --- 4. Échec des deux ---
     Serial.println("CommManager: Échec de l'initialisation des deux systèmes !");
     this->activeMode = CommMode::NONE;
@@ -68,7 +71,6 @@ void CommManager::registerRecvCallback(DataRecvCallback cb) {
 void CommManager::registerSendCallback(SendStatusCallback cb) {
     this->userSendCallback = cb;
 }
-
 
 bool CommManager::sendData(const char* jsonData) {
     const uint8_t* data = (const uint8_t*)jsonData;
@@ -84,6 +86,7 @@ bool CommManager::sendData(const char* jsonData) {
             return espNow.sendData(espnowPeerMac, data, len);
         
         case CommMode::LORA: {
+            // Utilise l'adresse 16 bits du pair
             bool success = lora.sendData(loraPeerAddress, data, len);
             if (userSendCallback) {
                 userSendCallback(success);
@@ -96,8 +99,6 @@ bool CommManager::sendData(const char* jsonData) {
             return false;
     }
 }
-
-
 
 void CommManager::onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len) {
     if (userRecvCallback) {
@@ -115,11 +116,19 @@ void CommManager::onEspNowSendStatus(bool success) {
     }
 }
 
-void CommManager::onLoraDataRecv(const uint8_t* data, int len, uint8_t from) {
+void CommManager::onLoraDataRecv(const uint8_t* data, int len, uint16_t from) {
     if (userRecvCallback) {
         SenderInfo sender = {};
         sender.mode = CommMode::LORA;
         sender.macAddress = nullptr;
         sender.loraAddress = from;
         userRecvCallback(sender, data, len); 
+    }
+}
+
+void CommManager::update() {
+
+    if (activeMode == CommMode::LORA) {
+        lora.update();
+    }
 }

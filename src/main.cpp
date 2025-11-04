@@ -55,9 +55,14 @@ void setup() {
 }
 
 void loop() {
+    // ...
     if (g_master) {
         g_master->update();
     } else if (g_follower) {
         g_follower->update();
     }
+    
+    if(g_master) g_master->getCommManager()->update(); 
+    if(g_follower) g_follower->getCommManager()->update(); 
+    
 }

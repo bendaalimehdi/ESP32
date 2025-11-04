@@ -1,27 +1,33 @@
 #pragma once
-#include <SPI.h>
-#include <LoRa.h>
+#include <HardwareSerial.h>
 #include <functional>
-#include "SharedStructures.h" // Pour LoraPins
+#include "ConfigLoader.h" // Pour ConfigPins et ConfigNetwork
 
 class LoraComms {
 public:
 
-    using DataRecvCallback = std::function<void(const uint8_t* data, int len, uint8_t from)>;
+    using DataRecvCallback = std::function<void(const uint8_t* data, int len, uint16_t from)>;
 
-    LoraComms(uint8_t localAddress);
-
-    bool begin(long frequency, const LoraPins& pins, uint8_t syncWord);
+    LoraComms(HardwareSerial& serial);
+    bool begin(const ConfigPins& pinConfig, const ConfigNetwork& netConfig);
     void registerRecvCallback(DataRecvCallback cb);
     
-    bool sendData(uint8_t destAddress, const uint8_t* data, int len);
-    void startReceiving();
+
+    bool sendData(uint16_t destAddress, const uint8_t* data, int len);
+    
+
+    void update();
 
 private:
-    static void onDataRecv_static(int packetSize);
-    void handleDataRecv(int packetSize);
-
-    static LoraComms* instance; 
-    uint8_t localAddress;
+    HardwareSerial& loraSerial; 
+    ConfigPins pins;
+    uint8_t channel; // Stocke le canal de communication
+    
     DataRecvCallback onDataReceived;
+    
+    void setMode(uint8_t mode);
+    bool waitForAux(unsigned long timeout = 1000);
+    bool configureModule(const ConfigNetwork& netConfig);
+    
+    uint8_t rxBuffer[MAX_PAYLOAD_SIZE];
 };

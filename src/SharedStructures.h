@@ -4,9 +4,5 @@
 /**
  * @brief 
  */
-struct LoraPins {
-    int cs;     
-    int reset;  
-    int irq;    
-};
+
 

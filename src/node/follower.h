@@ -12,6 +12,7 @@ public:
     Follower(const Config& config);
     void begin();
     void update();
+    CommManager* getCommManager();
 
 private:
     const Config& config; 
