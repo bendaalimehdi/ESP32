@@ -100,7 +100,6 @@ bool LoraComms::sendData(uint16_t destAddress, const uint8_t* data, int len) {
     return true;
 }
 
-// --- RÉCEPTION (CORRIGÉE) ---
 void LoraComms::update() {
     while (loraSerial.available()) {
         char c = (char)loraSerial.read();

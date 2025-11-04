@@ -61,8 +61,23 @@ bool loadConfig(Config& config) {
     config.network.lora_peer_addr = doc["network"]["lora_peer_addr"] | 2;
     config.network.lora_channel = doc["network"]["lora_channel"] | 23;
 
+    config.network.wifi_ssid = doc["network"]["wifi_ssid"] | "";
+    config.network.wifi_password = doc["network"]["wifi_password"] | "";
+    config.network.mqtt_broker = doc["network"]["mqtt_broker"] | "";
+    config.network.mqtt_port = doc["network"]["mqtt_port"] | 1883;
+    config.network.mqtt_user = doc["network"]["mqtt_user"] | "";
+    config.network.mqtt_pass = doc["network"]["mqtt_pass"] | "";
+    config.network.topic_telemetry_up = doc["network"]["topic_telemetry_up"] | "farm/telemetry";
+    config.network.topic_commands_down = doc["network"]["topic_commands_down"] | "farm/commands/master/set";
+
   
     config.logic.humidity_threshold = doc["logic"]["humidity_threshold"];
+
+    config.pins.valve_1 = doc["pins"]["valve_1"];
+    config.pins.valve_2 = doc["pins"]["valve_2"];
+    config.pins.valve_3 = doc["pins"]["valve_3"];
+    config.pins.valve_4 = doc["pins"]["valve_4"];
+    config.pins.valve_5 = doc["pins"]["valve_5"];
 
     
 

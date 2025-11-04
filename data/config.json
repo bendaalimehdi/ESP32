@@ -15,7 +15,12 @@
     "lora_m1": 11,     
     "lora_aux": 4,    
     "lora_rx": 16,     
-    "lora_tx": 17
+    "lora_tx": 17,     
+    "valve_1": 21,
+    "valve_2": 22,
+    "valve_3": 23,
+    "valve_4": 25,
+    "valve_5": 26
   },
   "calibration": {
     "soil_dry": 3100,
@@ -28,7 +33,15 @@
     "lora_freq_mhz": 915, 
     "lora_node_addr": 2,   
     "lora_peer_addr": 1,
-    "lora_channel": 24
+    "lora_channel": 24,
+    "wifi_ssid": "YourWiFiSSID",
+    "wifi_password": "YourWiFiPassword",
+    "mqtt_broker": "broker.hivemq.com",
+    "mqtt_port": 1883,
+    "mqtt_user": "",
+    "mqtt_pass": "",
+    "topic_telemetry_up": "farm/telemetry",
+    "topic_commands_down": "farm/commands/master/set"
   },
   "logic": {
     "humidity_threshold": 50.0

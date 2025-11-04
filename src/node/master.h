@@ -2,6 +2,8 @@
 #include <ArduinoJson.h>
 #include "actuators/Actuator.h"
 #include "comms/CommManager.h"
+#include "actuators/Electrovanne.h"
+#include "comms/WifiManager.h"
 #include "ConfigLoader.h"
 
 class Master {
@@ -17,10 +19,21 @@ private:
 
     Actuator actuator;
     CommManager comms;
+    WifiManager wifi;
     float lastReceivedHumidity;
+
+    Electrovanne valve1;
+    Electrovanne valve2;
+    Electrovanne valve3;
+    Electrovanne valve4;
+    Electrovanne valve5;
 
 
     StaticJsonDocument<MAX_PAYLOAD_SIZE> jsonDoc;
     
     void onDataReceived(const SenderInfo& sender, const uint8_t* data, int len);
+
+    
+
+    void onMqttCommandReceived(char* topic, byte* payload, unsigned int length);
 };
