@@ -31,6 +31,13 @@ public:
      */
     bool publishTelemetry(const char* payload, int len);
 
+    bool isTimeSynced();
+
+    /**
+     * @brief Récupère l'heure actuelle en secondes (epoch)
+     */
+    uint32_t getEpochTime();
+
 private:
     const ConfigNetwork* _netConfig; // Pointeur vers la config
     String _nodeId; // ID du nœud (pour l'ID client MQTT)

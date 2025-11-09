@@ -10,11 +10,17 @@ Electrovanne::Electrovanne(uint8_t pin)
       _autoCloseTime(0) {}
 
 void Electrovanne::begin() {
+    if (_pin == 0) {
+        return;
+    }
     pinMode(_pin, OUTPUT);
     close(); // S'assurer que la vanne est fermée au démarrage
 }
 
 void Electrovanne::open(uint32_t duration_ms) {
+    if (_pin == 0) {
+        return;
+    }
     digitalWrite(_pin, VALVE_OPEN_STATE);
     _isOpen = true;
 
@@ -28,6 +34,8 @@ void Electrovanne::open(uint32_t duration_ms) {
 }
 
 void Electrovanne::close() {
+    if (_pin == 0) 
+    return;
     digitalWrite(_pin, VALVE_CLOSED_STATE);
     _isOpen = false;
     _autoCloseTime = 0; // Annule tout minuteur

@@ -20,7 +20,7 @@ bool loadConfig(Config& config) {
     }
 
 
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<1536> doc; // Augmentation de la taille pour plus de capteurs
     DeserializationError error = deserializeJson(doc, configFile);
     configFile.close(); 
 
@@ -40,20 +40,42 @@ bool loadConfig(Config& config) {
 
     config.pins.led = doc["pins"]["led"];
     config.pins.led_brightness = doc["pins"]["led_brightness"] | 30;
-    config.pins.soil_sensor = doc["pins"]["soil_sensor"];
-    config.pins.soil_power = doc["pins"]["soil_power"];
-    config.pins.dht11 = doc["pins"]["dht11"];
     config.pins.lora_m0 = doc["pins"]["lora_m0"];
     config.pins.lora_m1 = doc["pins"]["lora_m1"];
     config.pins.lora_aux = doc["pins"]["lora_aux"];
     config.pins.lora_rx = doc["pins"]["lora_rx"];
     config.pins.lora_tx = doc["pins"]["lora_tx"];
 
+    // NOUVEAU PARSING DES CAPTEURS
+    JsonObject sensorsConfig = doc["sensors_config"];
+    
+    // Charger le capteur de température
+    JsonObject tempConfig = sensorsConfig["temperature_sensor"];
+    config.sensors.temp_sensor.enabled = tempConfig["enabled"] | false;
+    config.sensors.temp_sensor.pin = tempConfig["pin"];
 
-    config.calibration.soil_dry = doc["calibration"]["soil_dry"];
-    config.calibration.soil_wet = doc["calibration"]["soil_wet"];
+    // Charger les capteurs d'humidité
+    JsonArray soilSensorsConfig = sensorsConfig["soil_humidity_sensors"];
+    config.sensors.num_soil_sensors = 0;
+    for (JsonObject s_cfg : soilSensorsConfig) {
+        if (config.sensors.num_soil_sensors >= MAX_SOIL_SENSORS) {
+            Serial.println("Avertissement: Nombre max de capteurs d'humidité atteint.");
+            break;
+        }
 
-   
+        ConfigSensorSoil& s = config.sensors.soil_sensors[config.sensors.num_soil_sensors];
+        s.enabled = s_cfg["enabled"] | false;
+        s.sensorPin = s_cfg["sensorPin"];
+        s.powerPin = s_cfg["powerPin"];
+        s.dryValue = s_cfg["dryValue"];
+        s.wetValue = s_cfg["wetValue"];
+        
+        config.sensors.num_soil_sensors++;
+    }
+    // FIN NOUVEAU PARSING
+
+ 
+
     config.network.master_mac_str = doc["network"]["master_mac"] | "00:00:00:00:00:00";
     config.network.enableESPNow = doc["network"]["enableESPNow"] | true;  
     config.network.enableLora = doc["network"]["enableLora"] | true;    
@@ -72,6 +94,24 @@ bool loadConfig(Config& config) {
 
   
     config.logic.humidity_threshold = doc["logic"]["humidity_threshold"];
+    config.logic.num_send_times = 0;
+    JsonArray sendTimes = doc["logic"]["send_times"];
+    if (!sendTimes.isNull()) {
+        for (JsonObject t : sendTimes) {
+            if (config.logic.num_send_times < MAX_SEND_TIMES) {
+                
+                config.logic.send_times[config.logic.num_send_times].hour = t["hour"].as<uint8_t>();
+                config.logic.send_times[config.logic.num_send_times].minute = t["minute"].as<uint8_t>();
+                
+                Serial.print("Heure d'envoi chargée: ");
+                Serial.print(config.logic.send_times[config.logic.num_send_times].hour);
+                Serial.print(":");
+                Serial.println(config.logic.send_times[config.logic.num_send_times].minute);
+
+                config.logic.num_send_times++;
+            }
+        }
+    }
 
     config.pins.valve_1 = doc["pins"]["valve_1"];
     config.pins.valve_2 = doc["pins"]["valve_2"];
@@ -80,8 +120,6 @@ bool loadConfig(Config& config) {
     config.pins.valve_5 = doc["pins"]["valve_5"];
 
     
-
-
     if (!parseMacAddress(config.network.master_mac_str.c_str(), config.network.master_mac_bytes)) {
         Serial.println("Échec: Format MAC invalide dans config.json");
         return false;
@@ -92,6 +130,10 @@ bool loadConfig(Config& config) {
     Serial.println(config.identity.nodeId);
     Serial.print("Rôle: ");
     Serial.println(config.identity.isMaster ? "Master" : "Follower");
+    Serial.print(config.sensors.num_soil_sensors);
+    Serial.println(" capteurs d'humidité définis.");
+    Serial.print("Capteur de température activé: ");
+    Serial.println(config.sensors.temp_sensor.enabled ? "Oui" : "Non");
 
     return true;
 }

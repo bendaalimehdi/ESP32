@@ -78,14 +78,3 @@ void Actuator::showConnected() {
     blinkState = false; 
 }
 
-void Actuator::showStatus(float humidity) {
-
-    if (currentState == LedState::IDLE) {
-       
-        if (humidity > humidity_threshold) {
-            setColor(COLOR_GREEN); 
-        } else {
-            setColor(COLOR_RED); 
-        }
-    }
-}

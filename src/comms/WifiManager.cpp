@@ -31,9 +31,21 @@ void WifiManager::begin(const ConfigNetwork& netConfig) {
     Serial.println("\nConnecté au Wi-Fi !");
     Serial.print("Adresse IP: ");
     Serial.println(WiFi.localIP());
+
+    Serial.println("Initialisation du client NTP...");
+    configTime(3600, 3600, "pool.ntp.org");
     
     _mqttClient.setServer(_netConfig->mqtt_broker.c_str(), _netConfig->mqtt_port);
     _mqttClient.setCallback(mqttCallback_static);
+}
+
+bool WifiManager::isTimeSynced() {
+   
+    return time(nullptr) > 1672531200; 
+}
+
+uint32_t WifiManager::getEpochTime() {
+    return time(nullptr);
 }
 
 void WifiManager::registerCommandCallback(MqttCommandCallback cb) {

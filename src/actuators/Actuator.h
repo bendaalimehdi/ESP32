@@ -16,7 +16,7 @@ public:
     void update(); 
     void showSearching();
     void showConnected();
-    void showStatus(float humidity); 
+   
 
 private:
     

@@ -2,14 +2,14 @@
 #include <Arduino.h>
 
 #define MAX_PAYLOAD_SIZE 250
+#define MAX_SOIL_SENSORS 5 // Définit une limite max de capteurs d'humidité
+#define MAX_SEND_TIMES 10
 
 // Structure pour les pins
 struct ConfigPins {
     uint8_t led;
     uint8_t led_brightness;
-    uint8_t soil_sensor;
-    uint8_t soil_power;
-    uint8_t dht11;
+   
     uint8_t lora_m0;
     uint8_t lora_m1;
     uint8_t lora_aux;
@@ -31,11 +31,26 @@ struct ConfigIdentity {
     bool isMaster;
 };
 
-// Structure pour la calibration
-struct ConfigCalibration {
-    int soil_dry;
-    int soil_wet;
+// NOUVELLES STRUCTURES DE CAPTEURS
+struct ConfigSensorSoil {
+    bool enabled;
+    uint8_t sensorPin;
+    uint8_t powerPin;
+    uint16_t dryValue;
+    uint16_t wetValue;
 };
+
+struct ConfigSensorTemp {
+    bool enabled;
+    uint8_t pin;
+};
+
+struct ConfigSensors {
+    ConfigSensorTemp temp_sensor;
+    ConfigSensorSoil soil_sensors[MAX_SOIL_SENSORS];
+    uint8_t num_soil_sensors; 
+};
+// FIN NOUVELLES STRUCTURES
 
 // Structure pour le réseau
 struct ConfigNetwork {
@@ -60,13 +75,20 @@ struct ConfigNetwork {
 // Structure pour la logique
 struct ConfigLogic {
     float humidity_threshold;
+    SendTime send_times[MAX_SEND_TIMES];
+    uint8_t num_send_times;
+};
+
+struct SendTime {
+  uint8_t hour;
+  uint8_t minute;
 };
 
 // --- La structure globale ---
 struct Config {
     ConfigIdentity identity;
     ConfigPins pins;
-    ConfigCalibration calibration;
+    ConfigSensors sensors; 
     ConfigNetwork network;
     ConfigLogic logic;
   

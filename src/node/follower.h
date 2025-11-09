@@ -5,6 +5,7 @@
 #include "sensors/TemperatureSensor.h"
 #include "comms/CommManager.h"
 #include "ConfigLoader.h" 
+#include <sys/time.h> 
 
 class Follower {
 public:
@@ -18,11 +19,20 @@ private:
     const Config& config; 
     
     Actuator actuator;
-    SoilHumiditySensor sensor;
-    TemperatureSensor tempSensor;
-    CommManager comms;
+    SoilHumiditySensor* soilSensors[MAX_SOIL_SENSORS];
+    uint8_t numSoilSensors; 
     
-    unsigned long lastSendTime;
+    TemperatureSensor* tempSensor; 
+    
+    CommManager comms;
+    unsigned long lastTimeCheck;
+
+    // MODIFIÉ: Renommage pour gérer les minutes
+    bool alreadySentThisMinute; 
+    bool timeIsSynced;
+    int lastCheckedMinute; 
 
     void onDataSent(bool success);
+    void sendSensorData();
+    void onDataReceived(const SenderInfo& sender, const uint8_t* data, int len); 
 };

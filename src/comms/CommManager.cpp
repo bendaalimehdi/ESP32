@@ -4,7 +4,7 @@
 // Constructeur mis à jour pour initialiser lora(Serial2)
 CommManager::CommManager() 
     : espNow(), 
-      lora(Serial2), // Initialise le pilote LoRa Ebyte avec Serial2
+      lora(Serial1), // Initialise le pilote LoRa Ebyte avec Serial2
       activeMode(CommMode::NONE),
       espnowPeerMac(nullptr),
       loraPeerAddress(0),
