@@ -72,17 +72,19 @@ struct ConfigNetwork {
     String topic_commands_down;
 };
 
-// Structure pour la logique
-struct ConfigLogic {
-    float humidity_threshold;
-    SendTime send_times[MAX_SEND_TIMES];
-    uint8_t num_send_times;
-};
-
-struct SendTime {
+struct ConfigSendTime {
   uint8_t hour;
   uint8_t minute;
 };
+
+// Structure pour la logique
+struct ConfigLogic {
+    float humidity_threshold;
+    ConfigSendTime send_times[MAX_SEND_TIMES];
+    uint8_t num_send_times;
+};
+
+
 
 // --- La structure globale ---
 struct Config {

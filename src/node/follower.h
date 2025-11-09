@@ -4,8 +4,7 @@
 #include "sensors/SoilHumiditySensor.h"
 #include "sensors/TemperatureSensor.h"
 #include "comms/CommManager.h"
-#include "ConfigLoader.h" 
-#include <sys/time.h> 
+#include "ConfigLoader.h" // Contient MAX_SOIL_SENSORS
 
 class Follower {
 public:

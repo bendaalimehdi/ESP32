@@ -1,6 +1,7 @@
 #include "Follower.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <time.h> // Nécessaire pour localtime() et time()
 
 
 Follower::Follower(const Config& config) 
@@ -10,9 +11,10 @@ Follower::Follower(const Config& config)
       numSoilSensors(0), 
       tempSensor(nullptr),
       lastTimeCheck(0),
-      alreadySentThisHour(false), 
+      // MODIFIÉ: Renommage pour gérer les minutes
+      alreadySentThisMinute(true), // true pour ne pas envoyer au démarrage
       timeIsSynced(false),
-      lastCheckedHour(-1)
+      lastCheckedMinute(-1) // Initialisé à -1 pour forcer la vérification
 {
     // --- Initialisation dynamique des capteurs ---
     
@@ -33,7 +35,7 @@ Follower::Follower(const Config& config)
                 s_cfg.dryValue,
                 s_cfg.wetValue
             );
-            numSoilSensors++; 
+            numSoilSensors++; // Incrémenter le nombre de capteurs actifs
         }
     }
     Serial.print(numSoilSensors);
@@ -75,51 +77,54 @@ void Follower::begin() {
 
 void Follower::update() {
 
-
-
     // 1. On ne peut rien faire si l'heure n'est pas synchronisée
     if (!timeIsSynced) {
         return; 
     }
 
-    // 2. Récupérer l'heure actuelle
+    // 2. Récupérer l'heure et la minute actuelles
     time_t now_epoch = time(nullptr);
     struct tm* timeinfo = localtime(&now_epoch);
     int currentHour = timeinfo->tm_hour; // Heure actuelle (0-23)
+    int currentMinute = timeinfo->tm_min; // Minute actuelle (0-59)
 
-    // 3. Détecter si l'heure a changé (ex: passage de 9h à 10h)
-    if (currentHour != lastCheckedHour) {
-        Serial.print("Nouvelle heure détectée : ");
-        Serial.print(currentHour);
-        Serial.println("h. Réautorisation d'envoi.");
+    // 3. Détecter si la minute a changé (ex: passage de 10:22 à 10:23)
+    if (currentMinute != lastCheckedMinute) {
         
-        alreadySentThisHour = false; // C'est une nouvelle heure, on a le droit d'envoyer.
-        lastCheckedHour = currentHour;
+        alreadySentThisMinute = false; // C'est une nouvelle minute, on a le droit d'envoyer.
+        lastCheckedMinute = currentMinute;
     }
 
     // 4. Vérifier si on doit envoyer maintenant
     bool shouldSend = false;
-    if (!alreadySentThisHour) {
-        // Parcourir les heures d'envoi configurées
-        for (int i = 0; i < config.logic.num_send_hours; i++) {
-            if (currentHour == config.logic.send_hours[i]) {
+    if (!alreadySentThisMinute) {
+        // Parcourir les heures/minutes d'envoi configurées
+        for (int i = 0; i < config.logic.num_send_times; i++) {
+            
+            // Vérifie si l'heure ET la minute correspondent
+            if (currentHour == config.logic.send_times[i].hour &&
+                currentMinute == config.logic.send_times[i].minute) {
+                
                 shouldSend = true;
                 break; // On a trouvé une heure correspondante
             }
         }
     }
     
-    // 5. Si on doit envoyer (bonne heure ET pas déjà envoyé cette heure)
+    // 5. Si on doit envoyer (bonne heure/minute ET pas déjà envoyé cette minute)
     if (shouldSend) {
         
-        // On marque comme "envoyé" pour CETTE heure
-        alreadySentThisHour = true; 
+        // On marque comme "envoyé" pour CETTE minute
+        alreadySentThisMinute = true; 
         
         Serial.print("Heure d'envoi configurée (");
         Serial.print(currentHour);
-        Serial.println("h) atteinte. Envoi des données...");
+        Serial.print(":");
+        if (currentMinute < 10) Serial.print("0"); // Padding
+        Serial.print(currentMinute);
+        Serial.println(") atteinte. Envoi des données...");
 
-        // --- Début de la logique d'envoi (copiée de l'ancienne fonction) ---
+        // --- Début de la logique d'envoi ---
         StaticJsonDocument<384> doc; 
 
         // 1. Identité
@@ -160,13 +165,13 @@ void Follower::update() {
         // --- Fin de la logique d'envoi ---
     }
 }
+
+
 void Follower::onDataSent(bool success) {
     if (success) {
         Serial.println("Envoi OK");
-        
     } else {
         Serial.println("Envoi Échoué");
-        
     }
 }
 
@@ -196,13 +201,16 @@ void Follower::onDataReceived(const SenderInfo& sender, const uint8_t* data, int
         tv.tv_usec = 0;
         settimeofday(&tv, nullptr); // Nécessite <sys/time.h>
 
-        timeIsSynced = true;
-        
-        Serial.print("--- HEURE SYNCHRONISÉE ---");
-        // Afficher l'heure pour vérification
-        time_t now_epoch = time(nullptr);
-        struct tm* timeinfo = localtime(&now_epoch);
-        Serial.print(" Heure locale: ");
-        Serial.print(asctime(timeinfo));
+        if (epoch > 1672531200) { 
+            timeIsSynced = true;
+            
+            Serial.print("--- HEURE SYNCHRONISÉE ---");
+            time_t now_epoch = time(nullptr);
+            struct tm* timeinfo = localtime(&now_epoch);
+            Serial.print(" Heure locale: ");
+            Serial.print(asctime(timeinfo)); // 'asctime' ajoute un \n
+        } else {
+             Serial.println("Heure reçue invalide (epoch=0).");
+        }
     }
 }
