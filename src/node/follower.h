@@ -30,6 +30,8 @@ private:
     bool alreadySentThisMinute; 
     bool timeIsSynced;
     int lastCheckedMinute; 
+    uint8_t syncFails;
+    unsigned long lastSyncAttemptTime;
 
     void onDataSent(bool success);
     void sendSensorData();

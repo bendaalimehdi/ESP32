@@ -3,6 +3,7 @@
 #include "ConfigLoader.h" // Requis pour charger la config
 #include "node/Master.h"
 #include "node/Follower.h"
+#include <esp_task_wdt.h>
 
 // ... (vos pointeurs globaux) ...
 Config g_config;
@@ -14,6 +15,11 @@ void setup() {
     Serial.begin(115200);
     delay(2000); 
     Serial.println("Démarrage du nœud...");
+
+
+    Serial.println("Initialisation du Watchdog (10s timeout)...");
+    esp_task_wdt_init(20, true); // Timeout de 20s, "panic" (redémarrage) si déclenché
+    esp_task_wdt_add(NULL);
 
     // 3. Initialiser le système de fichiers
     if (!SPIFFS.begin(true)) {
@@ -55,7 +61,7 @@ void setup() {
 }
 
 void loop() {
-    // ...
+    esp_task_wdt_reset();
     if (g_master) {
         g_master->update();
     } else if (g_follower) {

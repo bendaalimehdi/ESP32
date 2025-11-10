@@ -58,6 +58,18 @@ void Master::update() {
     valve5.update();    
     
     wifi.update();
+    if (wifi.isMqttConnected() && !telemetryQueue.empty()) {
+        Serial.print("MQTT reconnecté. Envoi de ");
+        Serial.print(telemetryQueue.size());
+        Serial.println(" messages en file d'attente...");
+
+        // Envoyer tous les messages stockés
+        for (const auto& payload : telemetryQueue) {
+            wifi.publishTelemetry(payload.c_str(), payload.length());
+            delay(100); // Petit délai pour ne pas saturer le broker
+        }
+        telemetryQueue.clear(); // Vider la file
+    }
 }
 
 
@@ -96,6 +108,7 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
             Serial.print("%, ");
 
 
+
             if (wifi.isTimeSynced() && !wifi.isMqttConnected()) {
                 Serial.println("MQTT déconnecté, activation logique de secours.");
                 if (irrigationManager) {
@@ -110,7 +123,6 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
     
     Serial.print("], ");
 
-
     // Imprimer la température 
     if (!sensorsObj["temp"].isNull()) {
         Serial.print(temp, 2);
@@ -118,6 +130,37 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
     } else {
         Serial.print("Temp: N/A. ");
     }
+
+
+    // --- NOUVEAU: Implémentation de la Télémétrie + File d'attente ---
+    
+    // 1. Convertir le JSON reçu en chaîne de caractères
+    // (Nous réutilisons les données brutes 'data' car elles sont déjà le JSON)
+    // Pour être plus propre, on re-sérialise jsonDoc
+    char telemetryPayload[MAX_PAYLOAD_SIZE];
+    serializeJson(jsonDoc, telemetryPayload, sizeof(telemetryPayload));
+    int payloadLen = strlen(telemetryPayload);
+
+    // 2. Essayer d'envoyer, sinon mettre en file d'attente
+    if (wifi.isMqttConnected()) {
+        //
+        if (wifi.publishTelemetry(telemetryPayload, payloadLen)) {
+            Serial.println("Télémétrie transférée au serveur MQTT.");
+        } else {
+            Serial.println("Erreur envoi télémétrie (MQTT connecté).");
+        }
+    } else {
+        // MQTT est déconnecté, stocker le message
+        Serial.println("MQTT déconnecté. Mise en file d'attente du message.");
+        if (telemetryQueue.size() < MAX_QUEUE_SIZE) {
+            telemetryQueue.push_back(std::string(telemetryPayload));
+        } else {
+            Serial.println("File d'attente pleine. Message de télémétrie perdu !");
+        }
+    }
+
+
+
     
 
 

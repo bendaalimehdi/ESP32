@@ -6,6 +6,8 @@
 #include "comms/WifiManager.h"
 #include "ConfigLoader.h"
 #include "logic/IrrigationManager.h"
+#include <vector>
+#include <string>
 
 class Master {
 public:
@@ -35,6 +37,8 @@ private:
 
 
     StaticJsonDocument<MAX_PAYLOAD_SIZE> jsonDoc;
+    std::vector<std::string> telemetryQueue;
+    const size_t MAX_QUEUE_SIZE = 20; 
     
     void onDataReceived(const SenderInfo& sender, const uint8_t* data, int len);
 

@@ -6,15 +6,16 @@
 
 Follower::Follower(const Config& config) 
     : config(config), 
-      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold), 
+      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_thresholdMin), 
       comms(),
       numSoilSensors(0), 
       tempSensor(nullptr),
       lastTimeCheck(0),
-      // MODIFIÉ: Renommage pour gérer les minutes
-      alreadySentThisMinute(true), // true pour ne pas envoyer au démarrage
+      alreadySentThisMinute(false), 
       timeIsSynced(false),
-      lastCheckedMinute(-1) // Initialisé à -1 pour forcer la vérification
+      lastCheckedMinute(-1), 
+      syncFails(0), 
+      lastSyncAttemptTime(0) 
 {
     // --- Initialisation dynamique des capteurs ---
     
@@ -75,94 +76,113 @@ void Follower::begin() {
     Serial.println(comms.getActiveMode() == CommMode::ESP_NOW ? "ESP-NOW" : "LORA");
 }
 
-void Follower::update() {
 
-    // 1. On ne peut rien faire si l'heure n'est pas synchronisée
-    if (!timeIsSynced) {
-        return; 
+void Follower::sendSensorData() {
+    StaticJsonDocument<384> doc; 
+
+    // 1. Identité
+    doc["identity"]["farmId"] = config.identity.farmId;
+    doc["identity"]["zoneId"] = config.identity.zoneId;
+    doc["identity"]["nodeId"] = config.identity.nodeId;
+    doc["identity"]["isMaster"] = config.identity.isMaster;
+    
+    // NOUVEAU: Ajouter un timestamp (0 si non synchronisé)
+    doc["timestamp"] = timeIsSynced ? time(nullptr) : 0;
+  
+    // 2. Capteurs
+    JsonObject sensorsObj = doc.createNestedObject("sensors");
+        
+    float firstHumidity = 0.0; // Pour la LED de statut
+
+    for (int i = 0; i < numSoilSensors; i++) {
+        float h = soilSensors[i]->read();
+        String keyName = "soilHumidity" + String(i + 1); 
+        sensorsObj[keyName] = round(h * 100.0) / 100.0;
     }
 
-    // 2. Récupérer l'heure et la minute actuelles
+    // Ajouter la température 
+    if (tempSensor) {
+        float t = tempSensor->read();
+        sensorsObj["temp"] = round(t * 100.0) / 100.0;
+    } else {
+        sensorsObj["temp"] = nullptr; 
+    }
+    
+    char jsonString[384]; 
+    serializeJson(doc, jsonString, sizeof(jsonString));
+    
+    Serial.print("Envoi JSON: ");
+    Serial.println(jsonString);
+
+    if (!comms.sendData(jsonString)) {
+        Serial.println("Erreur d'envoi (file pleine?)");
+    }
+}
+
+void Follower::update() {
+
+    // 1. Gérer la logique si l'heure n'est PAS synchronisée
+    if (!timeIsSynced) {
+        unsigned long now = millis();
+        // Tenter d'envoyer (pour obtenir une synchro) toutes les 60 secondes
+        if (now - lastSyncAttemptTime > 60000) { 
+            if (syncFails < 3) {
+                Serial.print("Heure non synchro. Tentative d'envoi #");
+                Serial.println(syncFails + 1);
+                sendSensorData(); // Envoie les données pour demander l'heure
+                lastSyncAttemptTime = now;
+                syncFails++;
+            } else {
+                // Après 3 échecs, on abandonne et on passe en mode fallback
+                Serial.println("3 échecs de synchro. Passage en mode Fallback (envoi toutes les 5 min).");
+                // On "prétend" que l'heure est synchro pour débloquer la logique,
+                // mais time(nullptr) renverra 0 (ou une valeur proche).
+                // L'ancien `if (epoch > 1672531200)` nous protège.
+                // NOTE: On ne peut TOUJOURS pas utiliser le planning horaire.
+                // On va juste envoyer toutes les 5 minutes
+                sendSensorData();
+                lastSyncAttemptTime = now; // Réutilise cette variable pour l'envoi fallback
+            }
+        }
+        return; // Ne pas exécuter la logique basée sur l'heure
+    }
+
+    // 2. Si on arrive ici, timeIsSynced est TRUE
+    // ... (Récupérer l'heure et la minute actuelles) ...
     time_t now_epoch = time(nullptr);
     struct tm* timeinfo = localtime(&now_epoch);
-    int currentHour = timeinfo->tm_hour; // Heure actuelle (0-23)
-    int currentMinute = timeinfo->tm_min; // Minute actuelle (0-59)
+    int currentHour = timeinfo->tm_hour; 
+    int currentMinute = timeinfo->tm_min;
 
-    // 3. Détecter si la minute a changé (ex: passage de 10:22 à 10:23)
+    // ... (Détecter si la minute a changé) ...
     if (currentMinute != lastCheckedMinute) {
-        
-        alreadySentThisMinute = false; // C'est une nouvelle minute, on a le droit d'envoyer.
+        alreadySentThisMinute = false;
         lastCheckedMinute = currentMinute;
     }
 
     // 4. Vérifier si on doit envoyer maintenant
     bool shouldSend = false;
     if (!alreadySentThisMinute) {
-        // Parcourir les heures/minutes d'envoi configurées
         for (int i = 0; i < config.logic.num_send_times; i++) {
-            
-            // Vérifie si l'heure ET la minute correspondent
             if (currentHour == config.logic.send_times[i].hour &&
                 currentMinute == config.logic.send_times[i].minute) {
                 
                 shouldSend = true;
-                break; // On a trouvé une heure correspondante
+                break; 
             }
         }
     }
     
-    // 5. Si on doit envoyer (bonne heure/minute ET pas déjà envoyé cette minute)
+    // 5. Si on doit envoyer
     if (shouldSend) {
-        
-        // On marque comme "envoyé" pour CETTE minute
         alreadySentThisMinute = true; 
         
         Serial.print("Heure d'envoi configurée (");
-        Serial.print(currentHour);
-        Serial.print(":");
-        if (currentMinute < 10) Serial.print("0"); // Padding
-        Serial.print(currentMinute);
+        
         Serial.println(") atteinte. Envoi des données...");
 
-        // --- Début de la logique d'envoi ---
-        StaticJsonDocument<384> doc; 
-
-        // 1. Identité
-        doc["identity"]["farmId"] = config.identity.farmId;
-        doc["identity"]["zoneId"] = config.identity.zoneId;
-        doc["identity"]["nodeId"] = config.identity.nodeId;
-        doc["identity"]["isMaster"] = config.identity.isMaster;
-      
-        // 2. Capteurs
-        JsonObject sensorsObj = doc.createNestedObject("sensors");
-        
-        float firstHumidity = 0.0; // Pour la LED de statut
-
-        for (int i = 0; i < numSoilSensors; i++) {
-            float h = soilSensors[i]->read();
-            String keyName = "soilHumidity" + String(i + 1); 
-            sensorsObj[keyName] = round(h * 100.0) / 100.0;
-        }
-
-        // Ajouter la température 
-        if (tempSensor) {
-            float t = tempSensor->read();
-            sensorsObj["temp"] = round(t * 100.0) / 100.0;
-        } else {
-            sensorsObj["temp"] = nullptr; 
-        }
-        
-        
-        char jsonString[384]; 
-        serializeJson(doc, jsonString, sizeof(jsonString));
-        
-        Serial.print("Envoi JSON: ");
-        Serial.println(jsonString);
-
-        if (!comms.sendData(jsonString)) {
-            Serial.println("Erreur d'envoi (file pleine?)");
-        }
-        // --- Fin de la logique d'envoi ---
+        // --- Appel de la fonction refactorisée ---
+        sendSensorData();
     }
 }
 
@@ -203,6 +223,7 @@ void Follower::onDataReceived(const SenderInfo& sender, const uint8_t* data, int
 
         if (epoch > 1672531200) { 
             timeIsSynced = true;
+            syncFails = 0;
             
             Serial.print("--- HEURE SYNCHRONISÉE ---");
             time_t now_epoch = time(nullptr);
