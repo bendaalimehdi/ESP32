@@ -11,12 +11,13 @@ public:
     using SendStatusCallback = std::function<void(bool success)>;
 
     ESPNowComms();
+    bool begin(bool wifiAlreadyInited);
     bool begin(); 
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
 
-    void addPeer(const uint8_t* mac_addr);
+    void addPeer(const uint8_t* mac_addr, uint8_t channel);
     
 
     bool sendData(const uint8_t* mac_addr, const uint8_t* data, int len);

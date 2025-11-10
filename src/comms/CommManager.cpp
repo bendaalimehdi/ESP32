@@ -1,5 +1,6 @@
 #include "CommManager.h"
 #include <Arduino.h> // Pour Serial et Serial2
+#include <esp_wifi.h>
 
 // Constructeur mis à jour pour initialiser lora(Serial2)
 CommManager::CommManager() 
@@ -16,15 +17,21 @@ bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinCon
     
     // 1. Stocker l'adresse du pair
     this->espnowPeerMac = netConfig.master_mac_bytes;
+    this->espnowChannel = netConfig.wifi_channel;
     this->loraPeerAddress = netConfig.lora_peer_addr; // Utilise l'adresse 16 bits du pair
     
-    // --- 2. Tenter ESP-NOW (logique inchangée) ---
+    // --- 2. Tenter ESP-NOW 
     if (netConfig.enableESPNow) {
         Serial.println("CommManager: Tentative d'initialisation d'ESP-NOW...");
-        if (espNow.begin()) {
+        if (espNow.begin(isMaster)) {
             Serial.println("CommManager: ESP-NOW initialisé avec succès.");
+            if (!isMaster) {
+                Serial.print("Follower: Forçage du canal Wi-Fi/ESP-NOW sur : ");
+                Serial.println(this->espnowChannel);
+                esp_wifi_set_channel(this->espnowChannel, WIFI_SECOND_CHAN_NONE);
+            }
             if (this->espnowPeerMac != nullptr) {
-                espNow.addPeer(this->espnowPeerMac);
+                espNow.addPeer(this->espnowPeerMac, this->espnowChannel);
             }
             
             espNow.registerRecvCallback([this](const uint8_t* mac, const uint8_t* d, int l){ this->onEspNowDataRecv(mac, d, l); });

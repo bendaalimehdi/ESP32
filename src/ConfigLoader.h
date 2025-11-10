@@ -64,6 +64,7 @@ struct ConfigNetwork {
 
     String wifi_ssid;
     String wifi_password;
+    uint8_t  wifi_channel;
     String mqtt_broker;
     uint16_t mqtt_port;
     String mqtt_user;

@@ -86,6 +86,7 @@ bool loadConfig(Config& config) {
 
     config.network.wifi_ssid = doc["network"]["wifi_ssid"] | "";
     config.network.wifi_password = doc["network"]["wifi_password"] | "";
+    config.network.wifi_channel = doc["network"]["wifi_channel"] | 1;
     config.network.mqtt_broker = doc["network"]["mqtt_broker"] | "";
     config.network.mqtt_port = doc["network"]["mqtt_port"] | 1883;
     config.network.mqtt_user = doc["network"]["mqtt_user"] | "";

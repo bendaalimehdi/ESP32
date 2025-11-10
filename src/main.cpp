@@ -70,5 +70,6 @@ void loop() {
     
     if(g_master) g_master->getCommManager()->update(); 
     if(g_follower) g_follower->getCommManager()->update(); 
+    delay(10);
     
 }

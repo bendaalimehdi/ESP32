@@ -3,7 +3,7 @@
 
 Master::Master(const Config& config)
     : config(config),
-      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_thresholdMin),
+      actuator(config.pins.led, config.pins.led_brightness),
       wifi(),
       comms(), 
       valve1(config.pins.valve_1),
@@ -26,6 +26,8 @@ Master::Master(const Config& config)
 }
 
 void Master::begin() {
+    Serial.print("L'ADRESSE MAC DE CE MASTER EST : "); 
+    Serial.println(WiFi.macAddress());
     actuator.begin();
     valve1.begin();
     valve2.begin();
@@ -106,6 +108,12 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
             Serial.print(": ");
             Serial.print(h, 2);
             Serial.print("%, ");
+
+            if (sender.mode == CommMode::LORA) {
+                actuator.showLoraTxRx();
+            } else {
+                actuator.showConnected(); // Le Master est toujours "connecté"
+            }
 
 
 

@@ -40,6 +40,7 @@ private:
 
     const uint8_t* espnowPeerMac;
     uint16_t loraPeerAddress; 
+    uint8_t espnowChannel;
 
     DataRecvCallback userRecvCallback;
     SendStatusCallback userSendCallback;

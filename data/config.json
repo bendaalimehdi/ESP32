@@ -16,7 +16,7 @@
   },
   "sensors_config": {
     "temperature_sensor": {
-      "enabled": true,
+      "enabled": false,
       "pin": 12
     },
     "soil_humidity_sensors": [
@@ -48,7 +48,7 @@
     "soil_wet": 1200
   },
   "network": {
-    "master_mac": "30:ed:a0:0c:97:58",
+    "master_mac": "30:ED:A0:0C:97:58",
     "enableESPNow": true,
     "enableLora": false,
     "lora_freq_mhz": 915,
@@ -57,6 +57,7 @@
     "lora_channel": 24,
     "wifi_ssid": "BboxM",
     "wifi_password": "Midi2210@bbox",
+    "wifi_channel": 1,
     "mqtt_broker": "192.168.1.71",
     "mqtt_port": 1883,
     "mqtt_user": "",

@@ -7,9 +7,17 @@ ESPNowComms::ESPNowComms() {
     instance = this; 
 }
 
-bool ESPNowComms::begin() {
-    // WiFi.mode(WIFI_STA);
-    // WiFi.disconnect();
+bool ESPNowComms::begin(bool wifiAlreadyInited) {
+    if (!wifiAlreadyInited) {
+        // Pour le Follower : a besoin d'activer le Wi-Fi en mode STA
+        WiFi.mode(WIFI_STA);
+        WiFi.disconnect(); // S'assure qu'il n'est pas connecté à un réseau
+        Serial.println("ESPNowComms: Mode WIFI_STA activé pour le Follower.");
+    } else {
+        // Pour le Master : le WifiManager a déjà tout initialisé.
+        // Ne rien faire, ne pas déconnecter le Wi-Fi !
+        Serial.println("ESPNowComms: Wi-Fi déjà géré par le WifiManager (Master).");
+    }
 
     if (esp_now_init() != ESP_OK) {
         Serial.println("Erreur ESP-NOW Init");
@@ -30,10 +38,10 @@ void ESPNowComms::registerSendCallback(SendStatusCallback cb) {
     esp_now_register_send_cb(onDataSent_static);
 }
 
-void ESPNowComms::addPeer(const uint8_t* mac_addr) {
+void ESPNowComms::addPeer(const uint8_t* mac_addr , uint8_t channel) {
     esp_now_peer_info_t peerInfo = {};
     memcpy(peerInfo.peer_addr, mac_addr, 6);
-    peerInfo.channel = 0;
+    peerInfo.channel = channel;
     peerInfo.encrypt = false;
     
     if (esp_now_add_peer(&peerInfo) != ESP_OK){

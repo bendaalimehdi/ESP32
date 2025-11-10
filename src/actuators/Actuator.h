@@ -3,25 +3,29 @@
 
 enum class LedState {
     IDLE,
-    SEARCHING,
-    CONNECTED
+    SEARCHING,      // ESP-NOW recherche (bleu clignotant)
+    ESP_CONNECTING, // ESP-NOW connexion (bleu rapide)
+    CONNECTED,      // ESP-NOW connecté (vert long)
+    LORA_TXRX       // LoRa envoi/reçu (rouge rapide)
 };
 
 class Actuator {
 public:
-  
-    Actuator(uint8_t pin, uint8_t brightness, float humidity_threshold);
+    // Constructeur simplifié (humidity_threshold n'était pas utilisé)
+    Actuator(uint8_t pin, uint8_t brightness);
     
     void begin();
     void update(); 
-    void showSearching();
-    void showConnected();
-   
+
+    // --- Fonctions de contrôle ---
+    void showSearching();    // Bleu clignotant
+    void showEspNowConnecting(); // Bleu rapide
+    void showConnected();    // Vert long
+    void showLoraTxRx();     // Rouge rapide
+    void showIdle();         // Éteint
 
 private:
-    
     uint8_t brightness; 
-    float humidity_threshold; 
     
     LedState currentState;
     unsigned long stateStartTime;

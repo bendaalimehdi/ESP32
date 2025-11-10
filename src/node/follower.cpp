@@ -6,7 +6,7 @@
 
 Follower::Follower(const Config& config) 
     : config(config), 
-      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_thresholdMin), 
+      actuator(config.pins.led, config.pins.led_brightness),
       comms(),
       numSoilSensors(0), 
       tempSensor(nullptr),
@@ -79,6 +79,12 @@ void Follower::begin() {
 
 void Follower::sendSensorData() {
     StaticJsonDocument<384> doc; 
+
+    if (comms.getActiveMode() == CommMode::LORA) {
+    actuator.showLoraTxRx();
+    } else {
+        actuator.showEspNowConnecting(); // Montre le clignotement bleu rapide
+    }
 
     // 1. Identité
     doc["identity"]["farmId"] = config.identity.farmId;
@@ -212,6 +218,7 @@ void Follower::onDataReceived(const SenderInfo& sender, const uint8_t* data, int
     // Vérifier si c'est un message de synchro horaire
     const char* type = doc["type"];
     if (type != nullptr && strcmp(type, "timeSync") == 0) {
+        actuator.showConnected();
         
         uint32_t epoch = doc["epoch"];
         
