@@ -8,8 +8,8 @@ ESPNowComms::ESPNowComms() {
 }
 
 bool ESPNowComms::begin() {
-    WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
+    // WiFi.mode(WIFI_STA);
+    // WiFi.disconnect();
 
     if (esp_now_init() != ESP_OK) {
         Serial.println("Erreur ESP-NOW Init");

@@ -78,7 +78,8 @@ bool loadConfig(Config& config) {
 
     config.network.master_mac_str = doc["network"]["master_mac"] | "00:00:00:00:00:00";
     config.network.enableESPNow = doc["network"]["enableESPNow"] | true;  
-    config.network.enableLora = doc["network"]["enableLora"] | true;    
+    config.network.enableLora = doc["network"]["enableLora"] | true;   
+    config.network.enableMqtt = doc["network"]["enableMqtt"] | false; 
     config.network.lora_node_addr = doc["network"]["lora_node_addr"] | 1;
     config.network.lora_peer_addr = doc["network"]["lora_peer_addr"] | 2;
     config.network.lora_channel = doc["network"]["lora_channel"] | 23;

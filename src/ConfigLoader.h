@@ -70,6 +70,7 @@ struct ConfigNetwork {
     String mqtt_pass;
     String topic_telemetry_up;
     String topic_commands_down;
+    bool enableMqtt;
 };
 
 struct ConfigSendTime {

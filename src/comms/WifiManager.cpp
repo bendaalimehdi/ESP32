@@ -7,12 +7,14 @@ WifiManager::WifiManager()
     : _netConfig(nullptr),
       _mqttClient(_wifiClient),
       _lastReconnectAttempt(0),
-      _commandCallback(nullptr) {
+      _commandCallback(nullptr),
+      _isEnabled(false) {
     _instance = this;
 }
 
 void WifiManager::begin(const ConfigNetwork& netConfig) {
     _netConfig = &netConfig;
+    _isEnabled = _netConfig->enableMqtt;
     
     Serial.print("Connexion au Wi-Fi: ");
     Serial.println(_netConfig->wifi_ssid);
@@ -35,8 +37,12 @@ void WifiManager::begin(const ConfigNetwork& netConfig) {
     Serial.println("Initialisation du client NTP...");
     configTime(3600, 3600, "pool.ntp.org");
     
-    _mqttClient.setServer(_netConfig->mqtt_broker.c_str(), _netConfig->mqtt_port);
-    _mqttClient.setCallback(mqttCallback_static);
+   if (_isEnabled) {
+        _mqttClient.setServer(_netConfig->mqtt_broker.c_str(), _netConfig->mqtt_port);
+        _mqttClient.setCallback(mqttCallback_static);
+    } else {
+        Serial.println("MQTT est désactivé dans la configuration.");
+    }
 }
 
 bool WifiManager::isTimeSynced() {
@@ -53,13 +59,18 @@ void WifiManager::registerCommandCallback(MqttCommandCallback cb) {
 }
 
 void WifiManager::update() {
+    unsigned long now = millis();
+
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("Wi-Fi perdu. Tentative de reconnexion...");
-        WiFi.reconnect();
-        _lastReconnectAttempt = millis(); // Empêche la reconnexion MQTT
+    if (now - _lastReconnectAttempt > 5000) { 
+                Serial.println("Wi-Fi perdu. Tentative de reconnexion...");
+                _lastReconnectAttempt = now;
+                WiFi.reconnect();
+            }
         return;
     }
     
+    if (_isEnabled) {
     if (!_mqttClient.connected()) {
         unsigned long now = millis();
         // Tente de se reconnecter toutes les 5 secondes
@@ -73,9 +84,10 @@ void WifiManager::update() {
         _mqttClient.loop();
     }
 }
+}
 
 bool WifiManager::connectMqtt() {
-    if (_netConfig == nullptr) return false;
+    if (_netConfig == nullptr || !_isEnabled) return false;
 
     Serial.print("Tentative de connexion MQTT...");
     // Utilise l'ID du nœud (lu par ConfigLoader) comme ID client MQTT
@@ -98,11 +110,12 @@ bool WifiManager::connectMqtt() {
 }
 
 bool WifiManager::isMqttConnected() {
+    if (!_isEnabled) return false;
     return _mqttClient.connected();
 }
 
 bool WifiManager::publishTelemetry(const char* payload, int len) {
-    if (!_mqttClient.connected()) {
+    if (!_isEnabled || !_mqttClient.connected()) {
         Serial.println("Erreur: MQTT déconnecté, télémétrie non envoyée.");
         return false;
     }
@@ -112,6 +125,10 @@ bool WifiManager::publishTelemetry(const char* payload, int len) {
         return true;
     }
     return false;
+}
+
+bool WifiManager::isEnabled() const {
+    return _isEnabled;
 }
 
 // Le callback statique C

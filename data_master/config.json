@@ -1,0 +1,53 @@
+{
+  "identity": {
+    "farmId": "FARM001",
+    "zoneId": "ZONE001",
+    "nodeId": "NODE_Master_01",
+    "isMaster": true
+  },
+  "pins": {
+    "led": 33,
+    "led_brightness": 30,
+"lora_m0": 10,
+    "lora_m1": 9,
+    "lora_aux": 6,
+    "lora_rx": 35,   
+    "lora_tx": 36,   
+
+    "valve_1": 2,
+    "valve_2": 3,
+    "valve_3": 12,   
+    "valve_4": 13,   
+    "valve_5": 11
+  },
+
+
+  "calibration": {
+    "soil_dry": 3100,
+    "soil_wet": 1200
+  },
+  "network": {
+    "master_mac": "30:ed:a0:0c:97:58",
+    "enableESPNow": true,
+    "enableLora": false,
+    "lora_freq_mhz": 915,
+    "lora_node_addr": 2,
+    "lora_peer_addr": 1,
+    "lora_channel": 24,
+    "wifi_ssid": "BboxM",
+    "wifi_password": "Midi2210@bbox",
+    "enableMqtt": false,
+    "mqtt_broker": "192.168.1.71",
+    "mqtt_port": 1883,
+    "mqtt_user": "",
+    "mqtt_pass": "",
+    "topic_telemetry_up": "farm/telemetry",
+    "topic_commands_down": "farm/commands/master/set"
+  },
+  "logic": {
+    "humidity_thresholdMin": 20.0,
+    "humidity_thresholdMax": 80.0,
+    "defaultIrrigationDurationMs": 45000
+  
+}
+}

@@ -1,0 +1,848 @@
+{
+  "identity": {
+    "farmId": "FARM001",
+    "zoneId": "ZONE001",
+    "nodeId": "NODE_HUMIDITE_03",
+    "isMaster": false
+  },
+  "pins": {
+    "led": 33,
+    "led_brightness": 30,
+
+    "lora_m0": 10,
+    "lora_m1": 9,
+    "lora_aux": 6,
+    "lora_rx": 35,   
+    "lora_tx": 36
+
+
+  },
+
+  "sensors_config": {
+    "temperature_sensor": {
+      "enabled": true,
+      "pin": 12
+    },
+    "soil_humidity_sensors": [
+      {
+        "enabled": true,
+        "sensorPin": 4,
+        "powerPin": 5,
+        "dryValue": 3100,
+        "wetValue": 1200
+      },
+      {
+        "enabled": false,
+        "sensorPin": 15,
+        "powerPin": 41,
+        "dryValue": 3050,
+        "wetValue": 1150
+      },
+      {
+        "enabled": false,
+        "sensorPin": 16,
+        "powerPin": 42,
+        "dryValue": 3000,
+        "wetValue": 1100
+      }
+    ]
+  },
+
+  "calibration": {
+    "soil_dry": 3100,
+    "soil_wet": 1200
+  },
+  "network": {
+    "master_mac": "30:ed:a0:0c:97:58",
+    "enableESPNow": true,
+    "enableLora": false,
+    "lora_freq_mhz": 915,
+    "lora_node_addr": 2,
+    "lora_peer_addr": 1,
+    "lora_channel": 24,
+    "wifi_ssid": "BboxM",
+    "wifi_password": "Midi2210@bbox",
+    "mqtt_broker": "192.168.1.71",
+    "mqtt_port": 1883,
+    "mqtt_user": "",
+    "mqtt_pass": "",
+    "topic_telemetry_up": "farm/telemetry",
+    "topic_commands_down": "farm/commands/master/set"
+  },
+  "logic": {
+    "humidity_thresholdMin": 20.0,
+    "humidity_thresholdMax": 80.0,
+    "defaultIrrigationDurationMs": 45000,
+
+  "send_times": [
+    {
+      "hour": 8,
+      "minute": 0
+    },
+    {
+      "hour": 8,
+      "minute": 5
+    },
+    {
+      "hour": 8,
+      "minute": 10
+    },
+    {
+      "hour": 8,
+      "minute": 15
+    },
+    {
+      "hour": 8,
+      "minute": 20
+    },
+    {
+      "hour": 8,
+      "minute": 25
+    },
+    {
+      "hour": 8,
+      "minute": 30
+    },
+    {
+      "hour": 8,
+      "minute": 35
+    },
+    {
+      "hour": 8,
+      "minute": 40
+    },
+    {
+      "hour": 8,
+      "minute": 45
+    },
+    {
+      "hour": 8,
+      "minute": 50
+    },
+    {
+      "hour": 8,
+      "minute": 55
+    },
+    {
+      "hour": 9,
+      "minute": 0
+    },
+    {
+      "hour": 9,
+      "minute": 5
+    },
+    {
+      "hour": 9,
+      "minute": 10
+    },
+    {
+      "hour": 9,
+      "minute": 15
+    },
+    {
+      "hour": 9,
+      "minute": 20
+    },
+    {
+      "hour": 9,
+      "minute": 25
+    },
+    {
+      "hour": 9,
+      "minute": 30
+    },
+    {
+      "hour": 9,
+      "minute": 35
+    },
+    {
+      "hour": 9,
+      "minute": 40
+    },
+    {
+      "hour": 9,
+      "minute": 45
+    },
+    {
+      "hour": 9,
+      "minute": 50
+    },
+    {
+      "hour": 9,
+      "minute": 55
+    },
+    {
+      "hour": 10,
+      "minute": 0
+    },
+    {
+      "hour": 10,
+      "minute": 5
+    },
+    {
+      "hour": 10,
+      "minute": 10
+    },
+    {
+      "hour": 10,
+      "minute": 15
+    },
+    {
+      "hour": 10,
+      "minute": 20
+    },
+    {
+      "hour": 10,
+      "minute": 25
+    },
+    {
+      "hour": 10,
+      "minute": 30
+    },
+    {
+      "hour": 10,
+      "minute": 35
+    },
+    {
+      "hour": 10,
+      "minute": 40
+    },
+    {
+      "hour": 10,
+      "minute": 45
+    },
+    {
+      "hour": 10,
+      "minute": 50
+    },
+    {
+      "hour": 10,
+      "minute": 55
+    },
+    {
+      "hour": 11,
+      "minute": 0
+    },
+    {
+      "hour": 11,
+      "minute": 5
+    },
+    {
+      "hour": 11,
+      "minute": 10
+    },
+    {
+      "hour": 11,
+      "minute": 15
+    },
+    {
+      "hour": 11,
+      "minute": 20
+    },
+    {
+      "hour": 11,
+      "minute": 25
+    },
+    {
+      "hour": 11,
+      "minute": 30
+    },
+    {
+      "hour": 11,
+      "minute": 35
+    },
+    {
+      "hour": 11,
+      "minute": 40
+    },
+    {
+      "hour": 11,
+      "minute": 45
+    },
+    {
+      "hour": 11,
+      "minute": 50
+    },
+    {
+      "hour": 11,
+      "minute": 55
+    },
+    {
+      "hour": 12,
+      "minute": 0
+    },
+    {
+      "hour": 12,
+      "minute": 5
+    },
+    {
+      "hour": 12,
+      "minute": 10
+    },
+    {
+      "hour": 12,
+      "minute": 15
+    },
+    {
+      "hour": 12,
+      "minute": 20
+    },
+    {
+      "hour": 12,
+      "minute": 25
+    },
+    {
+      "hour": 12,
+      "minute": 30
+    },
+    {
+      "hour": 12,
+      "minute": 35
+    },
+    {
+      "hour": 12,
+      "minute": 40
+    },
+    {
+      "hour": 12,
+      "minute": 45
+    },
+    {
+      "hour": 12,
+      "minute": 50
+    },
+    {
+      "hour": 12,
+      "minute": 55
+    },
+    {
+      "hour": 13,
+      "minute": 0
+    },
+    {
+      "hour": 13,
+      "minute": 5
+    },
+    {
+      "hour": 13,
+      "minute": 10
+    },
+    {
+      "hour": 13,
+      "minute": 15
+    },
+    {
+      "hour": 13,
+      "minute": 20
+    },
+    {
+      "hour": 13,
+      "minute": 25
+    },
+    {
+      "hour": 13,
+      "minute": 30
+    },
+    {
+      "hour": 13,
+      "minute": 35
+    },
+    {
+      "hour": 13,
+      "minute": 40
+    },
+    {
+      "hour": 13,
+      "minute": 45
+    },
+    {
+      "hour": 13,
+      "minute": 50
+    },
+    {
+      "hour": 13,
+      "minute": 55
+    },
+    {
+      "hour": 14,
+      "minute": 0
+    },
+    {
+      "hour": 14,
+      "minute": 5
+    },
+    {
+      "hour": 14,
+      "minute": 10
+    },
+    {
+      "hour": 14,
+      "minute": 15
+    },
+    {
+      "hour": 14,
+      "minute": 20
+    },
+    {
+      "hour": 14,
+      "minute": 25
+    },
+    {
+      "hour": 14,
+      "minute": 30
+    },
+    {
+      "hour": 14,
+      "minute": 35
+    },
+    {
+      "hour": 14,
+      "minute": 40
+    },
+    {
+      "hour": 14,
+      "minute": 45
+    },
+    {
+      "hour": 14,
+      "minute": 50
+    },
+    {
+      "hour": 14,
+      "minute": 55
+    },
+    {
+      "hour": 15,
+      "minute": 0
+    },
+    {
+      "hour": 15,
+      "minute": 5
+    },
+    {
+      "hour": 15,
+      "minute": 10
+    },
+    {
+      "hour": 15,
+      "minute": 15
+    },
+    {
+      "hour": 15,
+      "minute": 20
+    },
+    {
+      "hour": 15,
+      "minute": 25
+    },
+    {
+      "hour": 15,
+      "minute": 30
+    },
+    {
+      "hour": 15,
+      "minute": 35
+    },
+    {
+      "hour": 15,
+      "minute": 40
+    },
+    {
+      "hour": 15,
+      "minute": 45
+    },
+    {
+      "hour": 15,
+      "minute": 50
+    },
+    {
+      "hour": 15,
+      "minute": 55
+    },
+    {
+      "hour": 16,
+      "minute": 0
+    },
+    {
+      "hour": 16,
+      "minute": 5
+    },
+    {
+      "hour": 16,
+      "minute": 10
+    },
+    {
+      "hour": 16,
+      "minute": 15
+    },
+    {
+      "hour": 16,
+      "minute": 20
+    },
+    {
+      "hour": 16,
+      "minute": 25
+    },
+    {
+      "hour": 16,
+      "minute": 30
+    },
+    {
+      "hour": 16,
+      "minute": 35
+    },
+    {
+      "hour": 16,
+      "minute": 40
+    },
+    {
+      "hour": 16,
+      "minute": 45
+    },
+    {
+      "hour": 16,
+      "minute": 50
+    },
+    {
+      "hour": 16,
+      "minute": 55
+    },
+    {
+      "hour": 17,
+      "minute": 0
+    },
+    {
+      "hour": 17,
+      "minute": 5
+    },
+    {
+      "hour": 17,
+      "minute": 10
+    },
+    {
+      "hour": 17,
+      "minute": 15
+    },
+    {
+      "hour": 17,
+      "minute": 20
+    },
+    {
+      "hour": 17,
+      "minute": 25
+    },
+    {
+      "hour": 17,
+      "minute": 30
+    },
+    {
+      "hour": 17,
+      "minute": 35
+    },
+    {
+      "hour": 17,
+      "minute": 40
+    },
+    {
+      "hour": 17,
+      "minute": 45
+    },
+    {
+      "hour": 17,
+      "minute": 50
+    },
+    {
+      "hour": 17,
+      "minute": 55
+    },
+    {
+      "hour": 18,
+      "minute": 0
+    },
+    {
+      "hour": 18,
+      "minute": 5
+    },
+    {
+      "hour": 18,
+      "minute": 10
+    },
+    {
+      "hour": 18,
+      "minute": 15
+    },
+    {
+      "hour": 18,
+      "minute": 20
+    },
+    {
+      "hour": 18,
+      "minute": 25
+    },
+    {
+      "hour": 18,
+      "minute": 30
+    },
+    {
+      "hour": 18,
+      "minute": 35
+    },
+    {
+      "hour": 18,
+      "minute": 40
+    },
+    {
+      "hour": 18,
+      "minute": 45
+    },
+    {
+      "hour": 18,
+      "minute": 50
+    },
+    {
+      "hour": 18,
+      "minute": 55
+    },
+    {
+      "hour": 19,
+      "minute": 0
+    },
+    {
+      "hour": 19,
+      "minute": 5
+    },
+    {
+      "hour": 19,
+      "minute": 10
+    },
+    {
+      "hour": 19,
+      "minute": 15
+    },
+    {
+      "hour": 19,
+      "minute": 20
+    },
+    {
+      "hour": 19,
+      "minute": 25
+    },
+    {
+      "hour": 19,
+      "minute": 30
+    },
+    {
+      "hour": 19,
+      "minute": 35
+    },
+    {
+      "hour": 19,
+      "minute": 40
+    },
+    {
+      "hour": 19,
+      "minute": 45
+    },
+    {
+      "hour": 19,
+      "minute": 50
+    },
+    {
+      "hour": 19,
+      "minute": 55
+    },
+    {
+      "hour": 20,
+      "minute": 0
+    },
+    {
+      "hour": 20,
+      "minute": 5
+    },
+    {
+      "hour": 20,
+      "minute": 10
+    },
+    {
+      "hour": 20,
+      "minute": 15
+    },
+    {
+      "hour": 20,
+      "minute": 20
+    },
+    {
+      "hour": 20,
+      "minute": 25
+    },
+    {
+      "hour": 20,
+      "minute": 30
+    },
+    {
+      "hour": 20,
+      "minute": 35
+    },
+    {
+      "hour": 20,
+      "minute": 40
+    },
+    {
+      "hour": 20,
+      "minute": 45
+    },
+    {
+      "hour": 20,
+      "minute": 50
+    },
+    {
+      "hour": 20,
+      "minute": 55
+    },
+    {
+      "hour": 21,
+      "minute": 0
+    },
+    {
+      "hour": 21,
+      "minute": 5
+    },
+    {
+      "hour": 21,
+      "minute": 10
+    },
+    {
+      "hour": 21,
+      "minute": 15
+    },
+    {
+      "hour": 21,
+      "minute": 20
+    },
+    {
+      "hour": 21,
+      "minute": 25
+    },
+    {
+      "hour": 21,
+      "minute": 30
+    },
+    {
+      "hour": 21,
+      "minute": 35
+    },
+    {
+      "hour": 21,
+      "minute": 40
+    },
+    {
+      "hour": 21,
+      "minute": 45
+    },
+    {
+      "hour": 21,
+      "minute": 50
+    },
+    {
+      "hour": 21,
+      "minute": 55
+    },
+    {
+      "hour": 22,
+      "minute": 0
+    },
+    {
+      "hour": 22,
+      "minute": 5
+    },
+    {
+      "hour": 22,
+      "minute": 10
+    },
+    {
+      "hour": 22,
+      "minute": 15
+    },
+    {
+      "hour": 22,
+      "minute": 20
+    },
+    {
+      "hour": 22,
+      "minute": 25
+    },
+    {
+      "hour": 22,
+      "minute": 30
+    },
+    {
+      "hour": 22,
+      "minute": 35
+    },
+    {
+      "hour": 22,
+      "minute": 40
+    },
+    {
+      "hour": 22,
+      "minute": 45
+    },
+    {
+      "hour": 22,
+      "minute": 50
+    },
+    {
+      "hour": 22,
+      "minute": 55
+    },
+    {
+      "hour": 23,
+      "minute": 0
+    },
+    {
+      "hour": 23,
+      "minute": 5
+    },
+    {
+      "hour": 23,
+      "minute": 10
+    },
+    {
+      "hour": 23,
+      "minute": 15
+    },
+    {
+      "hour": 23,
+      "minute": 20
+    },
+    {
+      "hour": 23,
+      "minute": 25
+    },
+    {
+      "hour": 23,
+      "minute": 30
+    },
+    {
+      "hour": 23,
+      "minute": 35
+    },
+    {
+      "hour": 23,
+      "minute": 40
+    },
+    {
+      "hour": 23,
+      "minute": 45
+    },
+    {
+      "hour": 23,
+      "minute": 50
+    },
+    {
+      "hour": 23,
+      "minute": 55
+    }
+  ]
+  }
+}

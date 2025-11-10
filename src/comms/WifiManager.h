@@ -39,6 +39,7 @@ public:
     uint32_t getEpochTime();
 
     bool isMqttConnected();
+    bool isEnabled() const;
 
 private:
     const ConfigNetwork* _netConfig; // Pointeur vers la config
@@ -50,6 +51,7 @@ private:
     MqttCommandCallback _commandCallback;
 
     bool connectMqtt();
+    bool _isEnabled;
 
     // Callback statique requis par PubSubClient
     static void mqttCallback_static(char* topic, byte* payload, unsigned int length);
