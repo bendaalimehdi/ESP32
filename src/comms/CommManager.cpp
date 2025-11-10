@@ -91,7 +91,7 @@ bool CommManager::sendData(const char* jsonData) {
             if (userSendCallback) {
                 userSendCallback(success);
             }
-            return true; 
+            return success; 
         }
         
         case CommMode::NONE:
@@ -99,6 +99,44 @@ bool CommManager::sendData(const char* jsonData) {
             return false;
     }
 }
+
+// Ajoutez cette nouvelle fonction dans src/comms/CommManager.cpp
+
+bool CommManager::sendDataToSender(const SenderInfo& recipient, const char* jsonData) {
+    const uint8_t* data = (const uint8_t*)jsonData;
+    int len = strlen(jsonData); 
+    
+    if (len > MAX_PAYLOAD_SIZE) {
+        Serial.println("Erreur: Payload JSON trop grand pour être envoyé !");
+        return false;
+    }
+
+    // Utilise le mode du destinataire, pas le mode "actif" global
+    switch(recipient.mode) {
+        case CommMode::ESP_NOW:
+            if (recipient.macAddress == nullptr) return false;
+            // Envoie à l'adresse MAC spécifique du destinataire
+            return espNow.sendData(recipient.macAddress, data, len);
+        
+        case CommMode::LORA: {
+            if (recipient.loraAddress == 0) return false; // Adresse LORA invalide
+            
+            // Envoie à l'adresse LORA 16 bits spécifique du destinataire
+            bool success = lora.sendData(recipient.loraAddress, data, len);
+            
+            // Déclenche le callback (comme le fait l'envoi LoRa par défaut)
+            if (userSendCallback) {
+                userSendCallback(success);
+            }
+            return success; // Recommandé: retourner le statut réel de l'envoi
+        }
+        
+        case CommMode::NONE:
+        default:
+            return false;
+    }
+}
+
 
 void CommManager::onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len) {
     if (userRecvCallback) {

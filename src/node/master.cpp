@@ -127,19 +127,12 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
         
         char replyJson[128];
         serializeJson(replyDoc, replyJson);
-
-        // 3. Envoyer la réponse au 'sender'
-        // Nous avons un problème : comms.sendData ne prend pas de destinataire
-        // Nous allons supposer que le Master ne parle qu'à UN Follower
-        // et que le "peer" configuré EST ce follower.
-        // C'est une limitation de votre CommManager actuel.
-        
         Serial.print("Envoi de la synchro horaire (");
         Serial.print(replyJson);
         Serial.print(") au Follower...");
         
         // Envoie la réponse EN UTILISANT LE CANAL DE COMM PAR DÉFAUT
-        if (comms.sendData(replyJson)) {
+        if (comms.sendDataToSender(sender, replyJson)) {
             Serial.println(" OK.");
         } else {
             Serial.println(" Échec.");

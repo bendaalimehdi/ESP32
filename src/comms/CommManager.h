@@ -21,13 +21,14 @@ public:
     using DataRecvCallback = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
-    CommManager(); // Constructeur mis à jour
+    CommManager(); 
 
     bool begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster);
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
     bool sendData(const char* jsonData);
+    bool sendDataToSender(const SenderInfo& recipient, const char* jsonData);
     void update();
     
     CommMode getActiveMode() const { return activeMode; }
