@@ -5,6 +5,7 @@
 #include "actuators/Electrovanne.h"
 #include "comms/WifiManager.h"
 #include "ConfigLoader.h"
+#include "logic/IrrigationManager.h"
 
 class Master {
 public:
@@ -27,6 +28,10 @@ private:
     Electrovanne valve3;
     Electrovanne valve4;
     Electrovanne valve5;
+
+    Electrovanne* valveArray[MAX_SOIL_SENSORS]; 
+ 
+    IrrigationManager* irrigationManager;
 
 
     StaticJsonDocument<MAX_PAYLOAD_SIZE> jsonDoc;

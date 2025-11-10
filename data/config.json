@@ -73,7 +73,9 @@
     "topic_commands_down": "farm/commands/master/set"
   },
   "logic": {
-    "humidity_threshold": 50.0,
+    "humidity_thresholdMin": 20.0,
+    "humidity_thresholdMax": 80.0,
+    "defaultIrrigationDurationMs": 45000,
 
   "send_times": [
     {

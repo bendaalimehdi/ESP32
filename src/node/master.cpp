@@ -3,7 +3,7 @@
 
 Master::Master(const Config& config)
     : config(config),
-      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_threshold),
+      actuator(config.pins.led, config.pins.led_brightness, config.logic.humidity_thresholdMin),
       wifi(),
       comms(), 
       valve1(config.pins.valve_1),
@@ -11,8 +11,19 @@ Master::Master(const Config& config)
       valve3(config.pins.valve_3),
       valve4(config.pins.valve_4),
       valve5(config.pins.valve_5),
-      lastReceivedHumidity(0.0f) 
-{}
+      lastReceivedHumidity(0.0f) ,
+      irrigationManager(nullptr)
+{
+    
+    valveArray[0] = &valve1;
+    valveArray[1] = &valve2;
+    valveArray[2] = &valve3;
+    valveArray[3] = &valve4;
+    valveArray[4] = &valve5;
+
+    
+    irrigationManager = new IrrigationManager(config.logic, valveArray);
+}
 
 void Master::begin() {
     actuator.begin();
@@ -83,6 +94,15 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
             Serial.print(": ");
             Serial.print(h, 2);
             Serial.print("%, ");
+
+
+            if (wifi.isTimeSynced() && !wifi.isMqttConnected()) {
+                Serial.println("MQTT déconnecté, activation logique de secours.");
+                if (irrigationManager) {
+                   
+                    irrigationManager->processSensorData(i, h);
+                }
+            }
 
         
         }

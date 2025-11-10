@@ -97,6 +97,10 @@ bool WifiManager::connectMqtt() {
     }
 }
 
+bool WifiManager::isMqttConnected() {
+    return _mqttClient.connected();
+}
+
 bool WifiManager::publishTelemetry(const char* payload, int len) {
     if (!_mqttClient.connected()) {
         Serial.println("Erreur: MQTT déconnecté, télémétrie non envoyée.");

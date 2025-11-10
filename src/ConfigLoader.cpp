@@ -93,7 +93,9 @@ bool loadConfig(Config& config) {
     config.network.topic_commands_down = doc["network"]["topic_commands_down"] | "farm/commands/master/set";
 
   
-    config.logic.humidity_threshold = doc["logic"]["humidity_threshold"];
+    config.logic.humidity_thresholdMin = doc["logic"]["humidity_thresholdMin"] | 40.0;
+    config.logic.humidity_thresholdMax = doc["logic"]["humidity_thresholdMax"] | 60.0;
+    config.logic.defaultIrrigationDurationMs = doc["logic"]["defaultIrrigationDurationMs"] | 30000; // 30 sec par défaut
     config.logic.num_send_times = 0;
     JsonArray sendTimes = doc["logic"]["send_times"];
     if (!sendTimes.isNull()) {

@@ -38,6 +38,8 @@ public:
      */
     uint32_t getEpochTime();
 
+    bool isMqttConnected();
+
 private:
     const ConfigNetwork* _netConfig; // Pointeur vers la config
     String _nodeId; // ID du nœud (pour l'ID client MQTT)

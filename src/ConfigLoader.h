@@ -79,7 +79,9 @@ struct ConfigSendTime {
 
 // Structure pour la logique
 struct ConfigLogic {
-    float humidity_threshold;
+    float humidity_thresholdMin;  
+    float humidity_thresholdMax;    
+    uint32_t defaultIrrigationDurationMs; //  Durée d'arrosage en ms
     ConfigSendTime send_times[MAX_SEND_TIMES];
     uint8_t num_send_times;
 };
