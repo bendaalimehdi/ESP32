@@ -2,24 +2,28 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <functional>
-// #include "SharedStructures.h" // N'est plus nécessaire
+#include <esp_err.h>
 
 class ESPNowComms {
 public:
-
-    using DataRecvCallback = std::function<void(const uint8_t* mac_addr, const uint8_t* data, int len)>;
+    using DataRecvCallback  = std::function<void(const uint8_t* mac_addr, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
     ESPNowComms();
-    bool begin(bool wifiAlreadyInited);
-    bool begin(); 
+    
+    /**
+     * @brief Initialise ESP-NOW
+     * @param wifiAlreadyInited true si le Wi-Fi est déjà initialisé (Master), false sinon (Follower)
+     * @return true si succès, false sinon
+     */
+    bool begin(bool wifiAlreadyInited = false);
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
 
     void addPeer(const uint8_t* mac_addr, uint8_t channel);
+    bool isPeerExist(const uint8_t* mac_addr);
     
-
     bool sendData(const uint8_t* mac_addr, const uint8_t* data, int len);
 
 private:
@@ -30,6 +34,6 @@ private:
     void handleDataSent(const uint8_t* mac, esp_now_send_status_t status);
 
     static ESPNowComms* instance; 
-    DataRecvCallback onDataReceived;
-    SendStatusCallback onSendStatus;
+    DataRecvCallback    onDataReceived;
+    SendStatusCallback  onSendStatus;
 };

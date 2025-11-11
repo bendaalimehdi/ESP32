@@ -15,10 +15,9 @@ struct SenderInfo {
     uint8_t loraAddress;
 };
 
-
 class CommManager {
 public:
-    using DataRecvCallback = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
+    using DataRecvCallback  = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
     CommManager(); 
@@ -27,22 +26,28 @@ public:
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
+
     bool sendData(const char* jsonData);
     bool sendDataToSender(const SenderInfo& recipient, const char* jsonData);
+
     void update();
     
     CommMode getActiveMode() const { return activeMode; }
 
+    // Pour le Master : gestion dynamique des peers ESP-NOW
+    void addEspNowPeer(const uint8_t* mac_addr);
+    bool isEspNowPeerExist(const uint8_t* mac_addr);
+
 private:
     ESPNowComms espNow;
-    LoraComms lora;
-    CommMode activeMode;
+    LoraComms   lora;
+    CommMode    activeMode;
 
-    const uint8_t* espnowPeerMac;
-    uint16_t loraPeerAddress; 
-    uint8_t espnowChannel;
+    const uint8_t* espnowPeerMac;  // côté Follower = MAC du Master, côté Master = nullptr
+    uint16_t      loraPeerAddress; 
+    uint8_t       espnowChannel;
 
-    DataRecvCallback userRecvCallback;
+    DataRecvCallback  userRecvCallback;
     SendStatusCallback userSendCallback;
 
     void onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len);

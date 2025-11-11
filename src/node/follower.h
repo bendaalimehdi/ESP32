@@ -14,6 +14,8 @@ public:
     void update();
     CommManager* getCommManager();
 
+
+
 private:
     const Config& config; 
     

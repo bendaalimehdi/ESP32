@@ -1,72 +1,114 @@
 #include "CommManager.h"
-#include <Arduino.h> // Pour Serial et Serial2
+#include <Arduino.h>
 #include <esp_wifi.h>
 
-// Constructeur mis à jour pour initialiser lora(Serial2)
 CommManager::CommManager() 
     : espNow(), 
-      lora(Serial1), // Initialise le pilote LoRa Ebyte avec Serial2
+      lora(Serial1),
       activeMode(CommMode::NONE),
       espnowPeerMac(nullptr),
       loraPeerAddress(0),
+      espnowChannel(1),
       userRecvCallback(nullptr),
       userSendCallback(nullptr) {}
 
 
 bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster) {
     
-    // 1. Stocker l'adresse du pair
-    this->espnowPeerMac = netConfig.master_mac_bytes;
-    this->espnowChannel = netConfig.wifi_channel;
-    this->loraPeerAddress = netConfig.lora_peer_addr; // Utilise l'adresse 16 bits du pair
+    // Stocker la config
+    this->espnowChannel   = netConfig.wifi_channel;
+    this->loraPeerAddress = netConfig.lora_peer_addr;
+
+    // IMPORTANT :
+    //  - Follower : peer fixe = MAC du Master (master_mac_bytes)
+    //  - Master   : peer dynamique (nullptr ici)
+    if (!isMaster) {
+        this->espnowPeerMac = netConfig.master_mac_bytes;
+    } else {
+        this->espnowPeerMac = nullptr;
+    }
     
-    // --- 2. Tenter ESP-NOW 
+    // --- TENTATIVE ESP-NOW ---
     if (netConfig.enableESPNow) {
         Serial.println("CommManager: Tentative d'initialisation d'ESP-NOW...");
-        if (espNow.begin(isMaster)) {
+        
+        bool wifiAlreadyInited = isMaster; // Master : WiFi déjà initialisé par WifiManager
+        if (espNow.begin(wifiAlreadyInited)) {
             Serial.println("CommManager: ESP-NOW initialisé avec succès.");
+            
+            // Configuration spécifique Follower
             if (!isMaster) {
                 Serial.print("Follower: Forçage du canal Wi-Fi/ESP-NOW sur : ");
                 Serial.println(this->espnowChannel);
                 esp_wifi_set_channel(this->espnowChannel, WIFI_SECOND_CHAN_NONE);
-            }
-            if (this->espnowPeerMac != nullptr) {
-                espNow.addPeer(this->espnowPeerMac, this->espnowChannel);
+                
+                // Le Follower ajoute le Master comme peer
+                if (this->espnowPeerMac != nullptr) {
+                    Serial.print("Follower: Ajout du Master comme peer (MAC: ");
+                    for (int i = 0; i < 6; i++) {
+                        if (espnowPeerMac[i] < 0x10) Serial.print("0");
+                        Serial.print(espnowPeerMac[i], HEX);
+                        if (i < 5) Serial.print(":");
+                    }
+                    Serial.println(")");
+                    
+                    // 0 = canal WiFi courant (après esp_wifi_set_channel, c'est bien le canal voulu)
+                    espNow.addPeer(this->espnowPeerMac, 0);
+                } else {
+                    Serial.println("⚠️ ERREUR : MAC du Master est NULL !");
+                }
+            } else {
+                Serial.println("Master: les peers ESP-NOW seront ajoutés dynamiquement.");
             }
             
-            espNow.registerRecvCallback([this](const uint8_t* mac, const uint8_t* d, int l){ this->onEspNowDataRecv(mac, d, l); });
-            espNow.registerSendCallback([this](bool s){ this->onEspNowSendStatus(s); });
+            // Enregistrer les callbacks
+            espNow.registerRecvCallback(
+                [this](const uint8_t* mac, const uint8_t* d, int l){ 
+                    this->onEspNowDataRecv(mac, d, l); 
+                }
+            );
+            espNow.registerSendCallback(
+                [this](bool s){ 
+                    this->onEspNowSendStatus(s); 
+                }
+            );
             
             this->activeMode = CommMode::ESP_NOW;
+            Serial.println("✅ CommManager: ESP-NOW activé et prêt.");
             return true;
+            
         } else {
-             Serial.println("CommManager: ESP-NOW activé, mais l'initialisation a échoué.");
+            Serial.println("❌ CommManager: ESP-NOW activé, mais l'initialisation a échoué.");
         }
     } else {
         Serial.println("CommManager: ESP-NOW désactivé dans la configuration.");
     }
 
-    // --- 3. Échec d'ESP-NOW, tenter LoRa ---
+    // --- TENTATIVE LORA (FALLBACK) ---
     if (netConfig.enableLora) { 
         Serial.println("CommManager: Tentative avec LoRa (Ebyte UART)...");
         
-        // L'appel à begin() pour le pilote Ebyte est différent
         if (lora.begin(pinConfig, netConfig)) {
-            Serial.println("CommManager: LoRa initialisé avec succès.");
+            Serial.println("✅ CommManager: LoRa initialisé avec succès.");
             
-            lora.registerRecvCallback([this](const uint8_t* d, int l, uint16_t f){ this->onLoraDataRecv(d, l, f); });
+            lora.registerRecvCallback(
+                [this](const uint8_t* d, int l, uint16_t f){ 
+                    this->onLoraDataRecv(d, l, f); 
+                }
+            );
             
             this->activeMode = CommMode::LORA;
             return true;
+            
         } else {
-            Serial.println("CommManager: LoRa activé, mais l'initialisation a échoué.");
+            Serial.println("❌ CommManager: LoRa activé, mais l'initialisation a échoué.");
         }
     } else {
-         Serial.println("CommManager: LoRa désactivé dans la configuration.");
+        Serial.println("CommManager: LoRa désactivé dans la configuration.");
     }
     
-    // --- 4. Échec des deux ---
-    Serial.println("CommManager: Échec de l'initialisation des deux systèmes !");
+    // --- ÉCHEC TOTAL ---
+    Serial.println("❌ CommManager: ÉCHEC de l'initialisation des deux systèmes !");
     this->activeMode = CommMode::NONE;
     return false;
 }
@@ -79,21 +121,42 @@ void CommManager::registerSendCallback(SendStatusCallback cb) {
     this->userSendCallback = cb;
 }
 
+void CommManager::addEspNowPeer(const uint8_t* mac_addr) {
+    if (!mac_addr) return;
+    espNow.addPeer(mac_addr, 0); // 0 = canal WiFi courant
+}
+
+bool CommManager::isEspNowPeerExist(const uint8_t* mac_addr) {
+    return espNow.isPeerExist(mac_addr);
+}
+
 bool CommManager::sendData(const char* jsonData) {
     const uint8_t* data = (const uint8_t*)jsonData;
     int len = strlen(jsonData); 
     
     if (len > MAX_PAYLOAD_SIZE) {
-        Serial.println("Erreur: Payload JSON trop grand pour être envoyé !");
+        Serial.println("❌ Erreur: Payload JSON trop grand pour être envoyé !");
         return false;
     }
 
     switch(activeMode) {
         case CommMode::ESP_NOW:
+            Serial.print("📡 Envoi ESP-NOW (");
+            Serial.print(len);
+            Serial.println(" octets)...");
+            if (!espnowPeerMac) {
+                Serial.println("❌ ESP-NOW: Aucun peer configuré (espnowPeerMac = NULL).");
+                return false;
+            }
             return espNow.sendData(espnowPeerMac, data, len);
         
         case CommMode::LORA: {
-            // Utilise l'adresse 16 bits du pair
+            Serial.print("📡 Envoi LoRa vers 0x");
+            Serial.print(loraPeerAddress, HEX);
+            Serial.print(" (");
+            Serial.print(len);
+            Serial.println(" octets)...");
+            
             bool success = lora.sendData(loraPeerAddress, data, len);
             if (userSendCallback) {
                 userSendCallback(success);
@@ -103,52 +166,76 @@ bool CommManager::sendData(const char* jsonData) {
         
         case CommMode::NONE:
         default:
+            Serial.println("❌ Aucun mode de comm actif !");
             return false;
     }
 }
-
-// Ajoutez cette nouvelle fonction dans src/comms/CommManager.cpp
 
 bool CommManager::sendDataToSender(const SenderInfo& recipient, const char* jsonData) {
     const uint8_t* data = (const uint8_t*)jsonData;
     int len = strlen(jsonData); 
     
     if (len > MAX_PAYLOAD_SIZE) {
-        Serial.println("Erreur: Payload JSON trop grand pour être envoyé !");
+        Serial.println("❌ Erreur: Payload JSON trop grand pour être envoyé !");
         return false;
     }
 
-    // Utilise le mode du destinataire, pas le mode "actif" global
     switch(recipient.mode) {
         case CommMode::ESP_NOW:
-            if (recipient.macAddress == nullptr) return false;
-            // Envoie à l'adresse MAC spécifique du destinataire
+            if (recipient.macAddress == nullptr) {
+                Serial.println("❌ Adresse MAC destinataire NULL !");
+                return false;
+            }
+            // S'assurer que le peer existe (Master)
+            if (!espNow.isPeerExist(recipient.macAddress)) {
+                Serial.println("ℹ️ Ajout dynamique du peer ESP-NOW côté Master.");
+                espNow.addPeer(recipient.macAddress, 0);
+            }
+            Serial.print("📡 Réponse ESP-NOW (");
+            Serial.print(len);
+            Serial.println(" octets)...");
             return espNow.sendData(recipient.macAddress, data, len);
         
         case CommMode::LORA: {
-            if (recipient.loraAddress == 0) return false; // Adresse LORA invalide
+            if (recipient.loraAddress == 0) {
+                Serial.println("❌ Adresse LoRa destinataire invalide !");
+                return false;
+            }
             
-            // Envoie à l'adresse LORA 16 bits spécifique du destinataire
+            Serial.print("📡 Réponse LoRa vers 0x");
+            Serial.print(recipient.loraAddress, HEX);
+            Serial.print(" (");
+            Serial.print(len);
+            Serial.println(" octets)...");
+            
             bool success = lora.sendData(recipient.loraAddress, data, len);
-            
-            // Déclenche le callback (comme le fait l'envoi LoRa par défaut)
             if (userSendCallback) {
                 userSendCallback(success);
             }
-            return success; // Recommandé: retourner le statut réel de l'envoi
+            return success;
         }
         
         case CommMode::NONE:
         default:
+            Serial.println("❌ Mode de comm destinataire invalide !");
             return false;
     }
 }
 
-
 void CommManager::onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int len) {
+    Serial.print("✅ ESP-NOW: Réception de ");
+    Serial.print(len);
+    Serial.print(" octets depuis ");
+    for (int i = 0; i < 6; i++) {
+        if (mac[i] < 0x10) Serial.print("0");
+        Serial.print(mac[i], HEX);
+        if (i < 5) Serial.print(":");
+    }
+    Serial.println();
+    
     if (userRecvCallback) {
         SenderInfo sender = {};
-        sender.mode = CommMode::ESP_NOW;
+        sender.mode       = CommMode::ESP_NOW;
         sender.macAddress = mac;
         sender.loraAddress = 0;
         userRecvCallback(sender, data, len); 
@@ -156,15 +243,26 @@ void CommManager::onEspNowDataRecv(const uint8_t* mac, const uint8_t* data, int 
 }
 
 void CommManager::onEspNowSendStatus(bool success) {
+    if (success) {
+        Serial.println("✅ ESP-NOW: Envoi réussi !");
+    } else {
+        Serial.println("❌ ESP-NOW: Échec d'envoi !");
+    }
+    
     if (userSendCallback) {
         userSendCallback(success);
     }
 }
 
 void CommManager::onLoraDataRecv(const uint8_t* data, int len, uint16_t from) {
+    Serial.print("✅ LoRa: Réception de ");
+    Serial.print(len);
+    Serial.print(" octets depuis 0x");
+    Serial.println(from, HEX);
+    
     if (userRecvCallback) {
         SenderInfo sender = {};
-        sender.mode = CommMode::LORA;
+        sender.mode       = CommMode::LORA;
         sender.macAddress = nullptr;
         sender.loraAddress = from;
         userRecvCallback(sender, data, len); 
@@ -172,7 +270,6 @@ void CommManager::onLoraDataRecv(const uint8_t* data, int len, uint16_t from) {
 }
 
 void CommManager::update() {
-
     if (activeMode == CommMode::LORA) {
         lora.update();
     }
