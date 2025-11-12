@@ -24,6 +24,7 @@ private:
     CommManager comms;
     WifiManager wifi;
     float lastReceivedHumidity;
+    
 
     Electrovanne valve1;
     Electrovanne valve2;

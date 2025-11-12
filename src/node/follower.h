@@ -13,6 +13,7 @@ public:
     void begin();
     void update();
     CommManager* getCommManager();
+    
 
 
 
@@ -34,6 +35,14 @@ private:
     int lastCheckedMinute; 
     uint8_t syncFails;
     unsigned long lastSyncAttemptTime;
+    bool isSending; 
+    uint8_t sendRetryCount; 
+    const uint8_t MAX_SEND_RETRIES = 5; 
+    String lastJsonPayload; 
+    uint16_t txSeq = 1;
+    unsigned long ackDeadlineMs = 0;
+    uint16_t pendingAckSeq = 0;
+    uint16_t baseRetryDelayMs = 120; // ESP-NOW
 
     void onDataSent(bool success);
     void sendSensorData();

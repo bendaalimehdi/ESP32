@@ -3,20 +3,24 @@
 #include <WiFi.h>
 #include <functional>
 #include <esp_err.h>
+#include "actuators/Actuator.h" 
+
+class Actuator; // Déclaration anticipée
 
 class ESPNowComms {
 public:
     using DataRecvCallback  = std::function<void(const uint8_t* mac_addr, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
-    ESPNowComms();
-    
+    // MODIFIÉ : Constructeur qui prend Actuator*
+    ESPNowComms(Actuator* actuator); 
+  
     /**
      * @brief Initialise ESP-NOW
-     * @param wifiAlreadyInited true si le Wi-Fi est déjà initialisé (Master), false sinon (Follower)
+     * @param isMaster true si Master (Wi-Fi géré par WifiManager), false sinon (Follower)
      * @return true si succès, false sinon
      */
-    bool begin(bool wifiAlreadyInited = false);
+    bool begin(bool isMaster = false); // Renommé 'wifiAlreadyInited' en 'isMaster' pour plus de clarté
 
     void registerRecvCallback(DataRecvCallback cb);
     void registerSendCallback(SendStatusCallback cb);
@@ -36,4 +40,7 @@ private:
     static ESPNowComms* instance; 
     DataRecvCallback    onDataReceived;
     SendStatusCallback  onSendStatus;
+    
+    // AJOUTÉ : Pointeur vers l'Actuator
+    Actuator* actuator; 
 };

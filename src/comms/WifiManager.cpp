@@ -18,7 +18,8 @@ void WifiManager::begin(const ConfigNetwork& netConfig) {
     
     Serial.print("Connexion au Wi-Fi: ");
     Serial.println(_netConfig->wifi_ssid);
-    WiFi.begin(_netConfig->wifi_ssid.c_str(), _netConfig->wifi_password.c_str());
+    WiFi.begin(_netConfig->wifi_ssid.c_str(), 
+               _netConfig->wifi_password.c_str());
     
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED) {

@@ -3,7 +3,8 @@
 
 ESPNowComms* ESPNowComms::instance = nullptr;
 
-ESPNowComms::ESPNowComms() {
+ESPNowComms::ESPNowComms(Actuator* actuator) 
+    : actuator(actuator) {
     instance = this; 
     onDataReceived = nullptr;
     onSendStatus   = nullptr;
@@ -92,6 +93,10 @@ bool ESPNowComms::sendData(const uint8_t* mac_addr, const uint8_t* data, int len
     if (!mac_addr) {
         Serial.println("❌ ESP-NOW sendData: mac_addr = NULL");
         return false;
+    }
+
+    if (actuator) {
+        actuator->showEspNowTxRx(); 
     }
 
     esp_err_t result = esp_now_send(mac_addr, data, len); 

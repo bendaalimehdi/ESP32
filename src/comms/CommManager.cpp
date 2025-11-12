@@ -2,21 +2,21 @@
 #include <Arduino.h>
 #include <esp_wifi.h>
 
-CommManager::CommManager() 
-    : espNow(), 
-      lora(Serial1),
+// MODIFIÉ : Le constructeur initialise espNow et lora avec l'Actuator
+CommManager::CommManager(Actuator* actuator) 
+    : espNow(actuator), // Utilise le nouveau constructeur ESPNowComms(Actuator*)
+      lora(Serial1, actuator), // Utilise le constructeur LoraComms(HardwareSerial&, Actuator*)
       activeMode(CommMode::NONE),
       espnowPeerMac(nullptr),
       loraPeerAddress(0),
       espnowChannel(1),
       userRecvCallback(nullptr),
-      userSendCallback(nullptr) {}
+      userSendCallback(nullptr),
+      actuator(actuator) {}
 
 
 bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster) {
     
-    // Stocker la config
-    this->espnowChannel   = netConfig.wifi_channel;
     this->loraPeerAddress = netConfig.lora_peer_addr;
 
     // IMPORTANT :
@@ -31,17 +31,11 @@ bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinCon
     // --- TENTATIVE ESP-NOW ---
     if (netConfig.enableESPNow) {
         Serial.println("CommManager: Tentative d'initialisation d'ESP-NOW...");
-        
-        bool wifiAlreadyInited = isMaster; // Master : WiFi déjà initialisé par WifiManager
-        if (espNow.begin(wifiAlreadyInited)) {
+        // isMaster est passé ici pour que ESPNowComms gère le Wi-Fi seulement si Follower
+        if (espNow.begin(isMaster)) {
             Serial.println("CommManager: ESP-NOW initialisé avec succès.");
-            
             // Configuration spécifique Follower
             if (!isMaster) {
-                Serial.print("Follower: Forçage du canal Wi-Fi/ESP-NOW sur : ");
-                Serial.println(this->espnowChannel);
-                esp_wifi_set_channel(this->espnowChannel, WIFI_SECOND_CHAN_NONE);
-                
                 // Le Follower ajoute le Master comme peer
                 if (this->espnowPeerMac != nullptr) {
                     Serial.print("Follower: Ajout du Master comme peer (MAC: ");
@@ -52,7 +46,7 @@ bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinCon
                     }
                     Serial.println(")");
                     
-                    // 0 = canal WiFi courant (après esp_wifi_set_channel, c'est bien le canal voulu)
+                    // 0 = canal WiFi courant
                     espNow.addPeer(this->espnowPeerMac, 0);
                 } else {
                     Serial.println("⚠️ ERREUR : MAC du Master est NULL !");

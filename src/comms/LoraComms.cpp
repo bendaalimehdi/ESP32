@@ -9,8 +9,9 @@
 // Buffer global
 static String recvBuffer = "";
 
-LoraComms::LoraComms(HardwareSerial& serial)
-    : loraSerial(serial), onDataReceived(nullptr) {}
+LoraComms::LoraComms(HardwareSerial& serial, Actuator* actuator)
+    : loraSerial(serial), onDataReceived(nullptr), actuator(actuator) {}
+    
 
 bool LoraComms::begin(const ConfigPins& pinConfig, const ConfigNetwork& netConfig) {
     this->pins = pinConfig;
@@ -77,6 +78,10 @@ bool LoraComms::sendData(uint16_t destAddress, const uint8_t* data, int len) {
     if (!waitForAux(2000)) {
         Serial.println("Ebyte : Timeout AUX avant envoi");
         return false;
+    }
+
+    if (actuator) {
+        actuator->showLoraTxRx();
     }
 
     uint8_t dest_addr_h = (destAddress >> 8) & 0xFF;

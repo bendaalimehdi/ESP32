@@ -3,7 +3,7 @@
 
 #define MAX_PAYLOAD_SIZE 250
 #define MAX_SOIL_SENSORS 5 // Définit une limite max de capteurs d'humidité
-#define MAX_SEND_TIMES 10
+#define MAX_SEND_TIMES 200
 
 // Structure pour les pins
 struct ConfigPins {
@@ -64,7 +64,6 @@ struct ConfigNetwork {
 
     String wifi_ssid;
     String wifi_password;
-    uint8_t  wifi_channel;
     String mqtt_broker;
     uint16_t mqtt_port;
     String mqtt_user;

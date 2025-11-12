@@ -7,7 +7,8 @@
 Follower::Follower(const Config& config) 
     : config(config), 
       actuator(config.pins.led, config.pins.led_brightness),
-      comms(),
+      // MODIFIÉ : Passe &actuator au constructeur de comms
+      comms(&actuator),
       numSoilSensors(0), 
       tempSensor(nullptr),
       lastTimeCheck(0),
@@ -15,7 +16,9 @@ Follower::Follower(const Config& config)
       timeIsSynced(false),
       lastCheckedMinute(-1), 
       syncFails(0), 
-      lastSyncAttemptTime(0) 
+      lastSyncAttemptTime(0),
+      isSending(false), 
+      sendRetryCount(0) 
 {
     // --- Initialisation dynamique des capteurs ---
     
@@ -79,11 +82,9 @@ void Follower::begin() {
 
 void Follower::sendSensorData() {
     StaticJsonDocument<384> doc; 
-
-    if (comms.getActiveMode() == CommMode::LORA) {
-    actuator.showLoraTxRx();
-    } else {
-        actuator.showEspNowConnecting(); // Montre le clignotement bleu rapide
+    if (isSending) {
+        Serial.println("⚠️ Envoi précédent toujours en cours, annulation.");
+        return;
     }
 
     // 1. Identité
@@ -116,16 +117,26 @@ void Follower::sendSensorData() {
     
     char jsonString[384]; 
     serializeJson(doc, jsonString, sizeof(jsonString));
+    lastJsonPayload = String(jsonString);
     
-    Serial.print("Envoi JSON: ");
+    Serial.print("Envoi JSON (Tentative 1/ ");
+    Serial.print(MAX_SEND_RETRIES);
+    Serial.println("): ");
     Serial.println(jsonString);
 
-    if (!comms.sendData(jsonString)) {
+    isSending = true;
+    sendRetryCount = 1;
+
+    if (!comms.sendData(lastJsonPayload.c_str())) {
         Serial.println("Erreur d'envoi (file pleine?)");
     }
 }
 
 void Follower::update() {
+
+    if (isSending) {
+        return; 
+    }
 
     // 1. Gérer la logique si l'heure n'est PAS synchronisée
     if (!timeIsSynced) {
@@ -194,12 +205,45 @@ void Follower::update() {
 
 
 void Follower::onDataSent(bool success) {
+    if (!isSending) {
+        // Rien à faire si aucun envoi n'est en cours
+        return;
+    }
+
     if (success) {
         Serial.println("Envoi OK");
+        isSending = false;
+        sendRetryCount = 0;
+        return;
+    }
+
+    // Ici: échec d'envoi (pas de ACK)
+    Serial.print("❌ Envoi Échoué (pas de ACK).");
+
+    if (sendRetryCount < MAX_SEND_RETRIES) {
+        sendRetryCount++;
+        Serial.print(" Nouvel essai (");
+        Serial.print(sendRetryCount);
+        Serial.print("/");
+        Serial.print(MAX_SEND_RETRIES);
+        Serial.println(")...");
+
+        // Attendre un petit peu avant de ré-essayer
+        delay(100); // 100ms
+
+        // Renvoyer le *dernier* payload
+        if (!comms.sendData(lastJsonPayload.c_str())) {
+            Serial.println("   Erreur ré-envoi (file pleine?)");
+            // On arrête les envois pour ne pas rester bloqué
+            isSending = false;
+        }
+        // Si l'envoi est accepté, on attend à nouveau le callback onDataSent
     } else {
-        Serial.println("Envoi Échoué");
+        Serial.println(" Échec final après max de réessais.");
+        isSending = false; // On a échoué, on abandonne
     }
 }
+
 
 CommManager* Follower::getCommManager() {
     return &comms; 
@@ -218,7 +262,6 @@ void Follower::onDataReceived(const SenderInfo& sender, const uint8_t* data, int
     // Vérifier si c'est un message de synchro horaire
     const char* type = doc["type"];
     if (type != nullptr && strcmp(type, "timeSync") == 0) {
-        actuator.showConnected();
         
         uint32_t epoch = doc["epoch"];
         

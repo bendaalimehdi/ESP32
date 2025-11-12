@@ -3,6 +3,7 @@
 #define COLOR_RED     0xAA0000
 #define COLOR_GREEN   0x00AA00
 #define COLOR_BLUE    0x0000AA
+#define COLOR_ORANGE  0xAA5500 // Nouveau : Orange
 #define COLOR_OFF     0x000000
 
 // Intervales de clignotement (en ms)
@@ -47,7 +48,7 @@ void Actuator::update() {
             break;
 
         case LedState::SEARCHING:
-            // ESP-NOW Recherche: Bleu clignotant lent
+            // ESP-NOW Recherche/Initialisation: Bleu clignotant lent
             if (now - lastBlinkTime > BLINK_SLOW) {
                 lastBlinkTime = now;
                 blinkState = !blinkState;
@@ -85,9 +86,22 @@ void Actuator::update() {
                 blinkState = !blinkState;
                 setColor(blinkState ? COLOR_RED : COLOR_OFF);
             }
-            // Après 2s, s'éteint (IDLE)
+            // Après 2s, retourne à l'état précédent (par défaut IDLE si le Follower n'est pas connecté)
             if (now - stateStartTime > STATE_TIMEOUT_SHORT) {
-                showIdle();
+                showIdle(); 
+            }
+            break;
+            
+        case LedState::ESP_TXRX:
+            // ESP-NOW Envoi/Reçu: Orange clignotant rapide
+            if (now - lastBlinkTime > BLINK_FAST) {
+                lastBlinkTime = now;
+                blinkState = !blinkState;
+                setColor(blinkState ? COLOR_ORANGE : COLOR_OFF);
+            }
+            // Après 2s, retourne à l'état précédent
+            if (now - stateStartTime > STATE_TIMEOUT_SHORT) {
+                showConnected(); // Le Master ou le Follower synchro est en CONNECTED
             }
             break;
     }
@@ -121,6 +135,12 @@ void Actuator::showConnected() {
 
 void Actuator::showLoraTxRx() {
     currentState = LedState::LORA_TXRX;
+    stateStartTime = millis();
+    blinkState = false; 
+}
+
+void Actuator::showEspNowTxRx() {
+    currentState = LedState::ESP_TXRX;
     stateStartTime = millis();
     blinkState = false; 
 }

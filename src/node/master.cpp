@@ -5,7 +5,8 @@ Master::Master(const Config& config)
     : config(config),
       actuator(config.pins.led, config.pins.led_brightness),
       wifi(),
-      comms(), 
+      // MODIFIÉ : Passe &actuator au constructeur de comms
+      comms(&actuator),
       valve1(config.pins.valve_1),
       valve2(config.pins.valve_2),
       valve3(config.pins.valve_3),
@@ -121,14 +122,6 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
             Serial.print(": ");
             Serial.print(h, 2);
             Serial.print("%, ");
-
-            // Mettre à jour l'actuateur selon le mode de comm
-            if (sender.mode == CommMode::LORA) {
-                actuator.showLoraTxRx();
-            } else {
-                actuator.showConnected();
-            }
-
             // Logique de secours si MQTT déconnecté
             if (wifi.isTimeSynced() && !wifi.isMqttConnected()) {
                 Serial.println("⚠️ MQTT déconnecté, activation logique de secours.");
@@ -183,7 +176,6 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
         Serial.println(sender.loraAddress, HEX);
     }
 
-    actuator.showConnected(); 
     
     // --- SYNCHRO HORAIRE ---
     if (wifi.isTimeSynced()) {

@@ -1,8 +1,8 @@
 {
   "identity": {
     "farmId": "FARM001",
-    "zoneId": "ZONE001",
-    "nodeId": "NODE_humidite_01",
+    "zoneId": "ZONE002",
+    "nodeId": "NODE_humidite_02",
     "isMaster": false
   },
   "pins": {
@@ -62,11 +62,12 @@
     "lora_channel": 24,
     "wifi_ssid": "BboxM",
     "wifi_password": "Midi2210@bbox",
-    "wifi_channel": 1,
+    "enableMqtt": true,
     "mqtt_broker": "192.168.1.71",
     "mqtt_port": 1883,
     "mqtt_user": "",
     "mqtt_pass": "",
+
     "topic_telemetry_up": "farm/telemetry",
     "topic_commands_down": "farm/commands/master/set"
   },

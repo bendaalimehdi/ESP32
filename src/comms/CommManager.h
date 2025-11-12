@@ -2,6 +2,7 @@
 #include "comms/ESPNowComms.h"
 #include "comms/LoraComms.h"
 #include "ConfigLoader.h"
+#include "actuators/Actuator.h" // Inclure Actuator.h
 
 enum class CommMode {
     NONE,
@@ -15,12 +16,17 @@ struct SenderInfo {
     uint8_t loraAddress;
 };
 
+
+
 class CommManager {
 public:
     using DataRecvCallback  = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
-    CommManager(); 
+    // RETIRÉ : CommManager(); // On n'utilise plus le constructeur par défaut
+    // AJOUTÉ : Constructeur prenant l'Actuator
+    CommManager(Actuator* actuator); 
+    
 
     bool begin(const ConfigNetwork& netConfig, const ConfigPins& pinConfig, bool isMaster);
 
@@ -39,9 +45,13 @@ public:
     bool isEspNowPeerExist(const uint8_t* mac_addr);
 
 private:
+    // Membres gérés par le constructeur
     ESPNowComms espNow;
     LoraComms   lora;
     CommMode    activeMode;
+
+    // Pointeur vers l'Actuator
+    Actuator* actuator;
 
     const uint8_t* espnowPeerMac;  // côté Follower = MAC du Master, côté Master = nullptr
     uint16_t      loraPeerAddress; 

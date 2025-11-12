@@ -6,7 +6,8 @@ enum class LedState {
     SEARCHING,      // ESP-NOW recherche (bleu clignotant)
     ESP_CONNECTING, // ESP-NOW connexion (bleu rapide)
     CONNECTED,      // ESP-NOW connecté (vert long)
-    LORA_TXRX       // LoRa envoi/reçu (rouge rapide)
+    LORA_TXRX,       // LoRa envoi/reçu (rouge rapide)
+    ESP_TXRX        // ESP-NOW envoi/reçu (orange rapide)
 };
 
 class Actuator {
@@ -22,7 +23,9 @@ public:
     void showEspNowConnecting(); // Bleu rapide
     void showConnected();    // Vert long
     void showLoraTxRx();     // Rouge rapide
-    void showIdle();         // Éteint
+    void showEspNowTxRx();  // Orange rapide
+    void showIdle(); // Éteint
+
 
 private:
     uint8_t brightness; 
