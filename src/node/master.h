@@ -40,6 +40,11 @@ private:
     StaticJsonDocument<MAX_PAYLOAD_SIZE> jsonDoc;
     std::vector<std::string> telemetryQueue;
     const size_t MAX_QUEUE_SIZE = 20; 
+
+    unsigned long lastWifiAttempt = 0;
+    static constexpr unsigned long WIFI_RETRY_INTERVAL_MS = 10UL * 60UL * 1000UL; // 10 minutes
+    bool wifiReady = false;
+
     
     void onDataReceived(const SenderInfo& sender, const uint8_t* data, int len);
 

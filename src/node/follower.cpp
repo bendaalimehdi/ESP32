@@ -7,7 +7,6 @@
 Follower::Follower(const Config& config) 
     : config(config), 
       actuator(config.pins.led, config.pins.led_brightness),
-      // MODIFIÉ : Passe &actuator au constructeur de comms
       comms(&actuator),
       numSoilSensors(0), 
       tempSensor(nullptr),
