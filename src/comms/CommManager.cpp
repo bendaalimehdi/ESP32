@@ -4,8 +4,8 @@
 
 // MODIFIÉ : Le constructeur initialise espNow et lora avec l'Actuator
 CommManager::CommManager(Actuator* actuator) 
-    : espNow(actuator), // Utilise le nouveau constructeur ESPNowComms(Actuator*)
-      lora(Serial1, actuator), // Utilise le constructeur LoraComms(HardwareSerial&, Actuator*)
+    : espNow(actuator), 
+      lora(Serial1, actuator), 
       activeMode(CommMode::NONE),
       espnowPeerMac(nullptr),
       loraPeerAddress(0),
@@ -80,7 +80,7 @@ bool CommManager::begin(const ConfigNetwork& netConfig, const ConfigPins& pinCon
 
     // --- TENTATIVE LORA (FALLBACK) ---
     if (netConfig.enableLora) { 
-        Serial.println("CommManager: Tentative avec LoRa (Ebyte UART)...");
+        Serial.println("CommManager: Tentative avec LoRa ...");
         
         if (lora.begin(pinConfig, netConfig)) {
             Serial.println("✅ CommManager: LoRa initialisé avec succès.");

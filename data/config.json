@@ -3,7 +3,7 @@
     "farmId": "FARM001",
     "zoneId": "ZONE002",
     "nodeId": "NODE_humidite_02",
-    "isMaster": false
+    "isMaster": true
   },
   "pins": {
     "led": 48,
@@ -11,9 +11,9 @@
 
     "lora_m0": 10,
     "lora_m1": 9,
-    "lora_aux": 6,
-    "lora_rx": 35,   
-    "lora_tx": 36
+    "lora_aux": 11,
+    "lora_rx": 17,   
+    "lora_tx": 18
 
 
   },
@@ -53,10 +53,10 @@
     "soil_wet": 1200
   },
   "network": {
-    "master_mac": "80:B5:4E:C1:E1:B4",
-    "enableESPNow": true,
-    "enableLora": false,
-    "lora_freq_mhz": 915,
+    "master_mac": "80:B5:4E:C3:23:D4",
+    "enableESPNow": false,
+    "enableLora": true,
+    "lora_freq_mhz": 868,
     "lora_node_addr": 2,
     "lora_peer_addr": 1,
     "lora_channel": 24,
