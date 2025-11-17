@@ -268,3 +268,9 @@ void CommManager::update() {
         lora.update();
     }
 }
+
+void CommManager::sleepIfLora() {
+    if (activeMode == CommMode::LORA) {
+        lora.sleep();
+    }
+}

@@ -67,6 +67,7 @@ private:
     // Gestion de l'ACK
     bool awaitingAck;
     unsigned long sendTime;
+    bool sendRawFrame(uint16_t destId, const uint8_t* data, int len);
     
     // Fonctions d'assistance pour le protocole
     bool sendAck(uint16_t srcId);

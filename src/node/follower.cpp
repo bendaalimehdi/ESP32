@@ -213,6 +213,7 @@ void Follower::onDataSent(bool success) {
         Serial.println("Envoi OK");
         isSending = false;
         sendRetryCount = 0;
+        comms.sleepIfLora();
         return;
     }
 
