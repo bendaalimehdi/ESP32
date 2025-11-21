@@ -8,6 +8,7 @@
 #include "logic/IrrigationManager.h"
 #include <vector>
 #include <string>
+#define MAX_VALVES 20
 
 class Master {
 public:
@@ -24,15 +25,13 @@ private:
     CommManager comms;
     WifiManager wifi;
     float lastReceivedHumidity;
+    Electrovanne* valveArray[MAX_VALVES] = {nullptr};
+    size_t numValves = 0;
     
 
-    Electrovanne valve1;
-    Electrovanne valve2;
-    Electrovanne valve3;
-    Electrovanne valve4;
-    Electrovanne valve5;
 
-    Electrovanne* valveArray[MAX_SOIL_SENSORS]; 
+
+
  
     IrrigationManager* irrigationManager;
 

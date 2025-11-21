@@ -112,11 +112,23 @@ bool loadConfig(Config& config) {
         }
     }
 
-    config.pins.valve_1 = doc["pins"]["valve_1"];
-    config.pins.valve_2 = doc["pins"]["valve_2"];
-    config.pins.valve_3 = doc["pins"]["valve_3"];
-    config.pins.valve_4 = doc["pins"]["valve_4"];
-    config.pins.valve_5 = doc["pins"]["valve_5"];
+    // Charger les électrovannes
+    JsonArray valveArray = doc["electrovalves"];
+    config.num_electrovalves = 0;
+
+    if (!valveArray.isNull()) {
+        for (JsonObject v : valveArray) {
+            if (config.num_electrovalves >= MAX_ELECTROVALVES) {
+                Serial.println("Avertissement: Max electrovanes atteint.");
+                break;
+            }
+
+            config.electrovalves[config.num_electrovalves].enabled = v["enabled"] | false;
+            config.electrovalves[config.num_electrovalves].pin = v["pin"] | 0;
+
+            config.num_electrovalves++;
+        }
+    }
 
     
     if (!parseMacAddress(config.network.master_mac_str.c_str(), config.network.master_mac_bytes)) {

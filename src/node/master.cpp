@@ -6,20 +6,26 @@ Master::Master(const Config& config)
       actuator(config.pins.led, config.pins.led_brightness),
       wifi(),
       comms(&actuator),
-      valve1(config.pins.valve_1),
-      valve2(config.pins.valve_2),
-      valve3(config.pins.valve_3),
-      valve4(config.pins.valve_4),
-      valve5(config.pins.valve_5),
       lastReceivedHumidity(0.0f),
       irrigationManager(nullptr)
 {
-    valveArray[0] = &valve1;
-    valveArray[1] = &valve2;
-    valveArray[2] = &valve3;
-    valveArray[3] = &valve4;
-    valveArray[4] = &valve5;
-
+// Déclarer les pointeurs d'Electrovanne dans le Master.h, allouer ici:
+    size_t configValveCount = config.num_electrovalves;
+    size_t maxIter = (configValveCount < MAX_VALVES) ? configValveCount : MAX_VALVES;
+    
+    
+    
+    numValves = 0; // Réinitialisation par sécurité
+    for (size_t i = 0; i < maxIter; ++i) { 
+        const auto& valveConfig = config.electrovalves[i];
+        if (valveConfig.enabled) {
+            valveArray[i] = new Electrovanne(valveConfig.pin);
+            numValves++;
+        } else {
+            valveArray[i] = nullptr;
+        }
+    }
+    
     irrigationManager = new IrrigationManager(config.logic, valveArray);
 }
 
@@ -31,11 +37,11 @@ void Master::begin() {
     actuator.begin();
     actuator.showSearching(); // Démarre en mode recherche
     
-    valve1.begin();
-    valve2.begin();
-    valve3.begin();
-    valve4.begin();
-    valve5.begin();
+    for (size_t i = 0; i < numValves; ++i) {
+            if (valveArray[i] != nullptr) {
+                valveArray[i]->begin();
+            }
+        }
     
     // Démarrer le Wi-Fi AVANT ESP-NOW (pour le Master)
     //wifi.begin(config.network);
@@ -72,11 +78,11 @@ void Master::begin() {
 
 void Master::update() {
     actuator.update();
-    valve1.update();
-    valve2.update();
-    valve3.update();
-    valve4.update();
-    valve5.update();    
+    for (size_t i = 0; i < numValves; ++i) {
+            if (valveArray[i] != nullptr) {
+                valveArray[i]->update();
+            }
+        }   
     
     //wifi.update();
 
@@ -245,11 +251,11 @@ void Master::onMqttCommandReceived(char* topic, byte* payload, unsigned int leng
 
     // Sélectionner la bonne vanne
     Electrovanne* targetValve = nullptr;
-    if (valve_num == 1) targetValve = &valve1;
-    if (valve_num == 2) targetValve = &valve2;
-    if (valve_num == 3) targetValve = &valve3;
-    if (valve_num == 4) targetValve = &valve4;
-    if (valve_num == 5) targetValve = &valve5;
+    size_t index = valve_num - 1;
+
+    if (index < numValves) {
+        targetValve = valveArray[index];
+    }
 
     if (targetValve == nullptr) {
         Serial.println("❌ Numéro de vanne inconnu.");

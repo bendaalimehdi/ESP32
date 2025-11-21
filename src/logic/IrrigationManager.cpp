@@ -1,17 +1,17 @@
 #include "IrrigationManager.h"
 
-IrrigationManager::IrrigationManager(const ConfigLogic& logic, Electrovanne* valves[MAX_MANAGED_VALVES])
+IrrigationManager::IrrigationManager(const ConfigLogic& logic, Electrovanne* valves[MAX_VALVES])
     : _logic(logic) 
 {
     // Copie les pointeurs de vannes
-    for (int i = 0; i < MAX_MANAGED_VALVES; i++) {
+    for (int i = 0; i < MAX_VALVES; i++) {
         _valves[i] = valves[i];
     }
 }
 
 void IrrigationManager::processSensorData(int sensorIndex, float humidity) {
     // Vérifie que l'index est valide (1-5)
-    if (sensorIndex < 1 || sensorIndex > MAX_MANAGED_VALVES) {
+    if (sensorIndex < 1 || sensorIndex > MAX_VALVES) {
         return;
     }
     

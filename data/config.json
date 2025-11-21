@@ -18,6 +18,13 @@
 
   },
 
+  "electrovalves": [
+  { "enabled": true,  "pin": 32 },
+  { "enabled": false, "pin": 33 },
+  { "enabled": true,  "pin": 25 },
+  { "enabled": false, "pin": 26 }
+],
+
   "sensors_config": {
     "temperature_sensor": {
       "enabled": false,
@@ -72,9 +79,9 @@
     "topic_commands_down": "farm/commands/master/set"
   },
   "logic": {
-    "humidity_thresholdMin": 20.0,
-    "humidity_thresholdMax": 80.0,
-    "defaultIrrigationDurationMs": 45000,
+    "humidity_thresholdMin": 30.0,
+    "humidity_thresholdMax": 70.0,
+    "defaultIrrigationDurationMs": 180000,
 
   "send_times": [
     {
