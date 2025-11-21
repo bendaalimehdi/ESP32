@@ -5,7 +5,6 @@ Master::Master(const Config& config)
     : config(config),
       actuator(config.pins.led, config.pins.led_brightness),
       wifi(),
-      // MODIFIÉ : Passe &actuator au constructeur de comms
       comms(&actuator),
       valve1(config.pins.valve_1),
       valve2(config.pins.valve_2),
@@ -39,7 +38,10 @@ void Master::begin() {
     valve5.begin();
     
     // Démarrer le Wi-Fi AVANT ESP-NOW (pour le Master)
-    wifi.begin(config.network);
+    //wifi.begin(config.network);
+
+    lastWifiAttempt = millis() - WIFI_RETRY_INTERVAL_MS;
+    wifiReady = false;
     
     // Initialiser les communications (ESP-NOW utilisera le Wi-Fi déjà initialisé)
     if (!comms.begin(config.network, config.pins, config.identity.isMaster)) {
@@ -59,7 +61,7 @@ void Master::begin() {
     Serial.print("✅ Master démarré. Mode Comms: ");
     if (comms.getActiveMode() == CommMode::ESP_NOW) {
         Serial.println("ESP-NOW");
-        actuator.showConnected(); // Le Master est toujours "connecté"
+        actuator.showConnected(); 
     } else if (comms.getActiveMode() == CommMode::LORA) {
         Serial.println("LORA");
     } else {
@@ -76,7 +78,27 @@ void Master::update() {
     valve4.update();
     valve5.update();    
     
-    wifi.update();
+    //wifi.update();
+
+        if (!wifiReady) {
+        unsigned long now = millis();
+        if (now - lastWifiAttempt >= WIFI_RETRY_INTERVAL_MS) {
+            lastWifiAttempt = now;
+
+            Serial.println("🔄 Tentative d'initialisation WiFi / MQTT...");
+
+            wifi.begin(config.network);
+            if (WiFi.status() == WL_CONNECTED) {
+                wifiReady = true;
+                Serial.println("✅ WiFi ok");
+            } else {
+                Serial.println("❌ Échec init WiFi. Nouvelle tentative dans 10 minutes.");
+            }
+        }
+    } else {
+        // Une fois initialisé, on laisse le WifiManager gérer les reconnexions internes
+        wifi.update();
+    }
     
     // Si MQTT reconnecté, vider la file d'attente
     if (wifi.isMqttConnected() && !telemetryQueue.empty()) {
@@ -123,7 +145,7 @@ void Master::onDataReceived(const SenderInfo& sender, const uint8_t* data, int l
             Serial.print(h, 2);
             Serial.print("%, ");
             // Logique de secours si MQTT déconnecté
-            if (wifi.isTimeSynced() && !wifi.isMqttConnected()) {
+            if (!wifi.isMqttConnected() || WiFi.status() != WL_CONNECTED) {
                 Serial.println("⚠️ MQTT déconnecté, activation logique de secours.");
                 if (irrigationManager) {
                     irrigationManager->processSensorData(i, h);

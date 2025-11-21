@@ -23,7 +23,7 @@ public:
     using DataRecvCallback  = std::function<void(const SenderInfo& sender, const uint8_t* data, int len)>;
     using SendStatusCallback = std::function<void(bool success)>;
 
-    // RETIRÉ : CommManager(); // On n'utilise plus le constructeur par défaut
+    void sleepIfLora();
     // AJOUTÉ : Constructeur prenant l'Actuator
     CommManager(Actuator* actuator); 
     

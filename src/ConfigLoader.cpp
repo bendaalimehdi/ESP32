@@ -20,7 +20,7 @@ bool loadConfig(Config& config) {
     }
 
 
-    StaticJsonDocument<1536> doc; // Augmentation de la taille pour plus de capteurs
+    StaticJsonDocument<1536> doc; 
     DeserializationError error = deserializeJson(doc, configFile);
     configFile.close(); 
 
@@ -107,10 +107,6 @@ bool loadConfig(Config& config) {
                 config.logic.send_times[config.logic.num_send_times].minute = t["minute"].as<uint8_t>();
                 
                 Serial.print("Heure d'envoi chargée: ");
-                Serial.print(config.logic.send_times[config.logic.num_send_times].hour);
-                Serial.print(":");
-                Serial.println(config.logic.send_times[config.logic.num_send_times].minute);
-
                 config.logic.num_send_times++;
             }
         }

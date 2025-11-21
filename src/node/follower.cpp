@@ -7,7 +7,6 @@
 Follower::Follower(const Config& config) 
     : config(config), 
       actuator(config.pins.led, config.pins.led_brightness),
-      // MODIFIÉ : Passe &actuator au constructeur de comms
       comms(&actuator),
       numSoilSensors(0), 
       tempSensor(nullptr),
@@ -214,6 +213,7 @@ void Follower::onDataSent(bool success) {
         Serial.println("Envoi OK");
         isSending = false;
         sendRetryCount = 0;
+        comms.sleepIfLora();
         return;
     }
 

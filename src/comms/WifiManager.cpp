@@ -135,7 +135,6 @@ bool WifiManager::isEnabled() const {
 // Le callback statique C
 void WifiManager::mqttCallback_static(char* topic, byte* payload, unsigned int length) {
     if (_instance && _instance->_commandCallback) {
-        // Appelle la fonction C++
         _instance->_commandCallback(topic, payload, length);
     }
 }
