@@ -12,7 +12,7 @@ enum class LedState {
 
 class Actuator {
 public:
-    // Constructeur simplifié (humidity_threshold n'était pas utilisé)
+    
     Actuator(uint8_t pin, uint8_t brightness);
     
     void begin();
