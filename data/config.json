@@ -1,8 +1,8 @@
 {
   "identity": {
     "farmId": "FARM001",
-    "zoneId": "ZONE002",
-    "nodeId": "NODE_humidite_02",
+    "zoneId": "ZONE001",
+    "nodeId": "NODE_humidite_01",
     "isMaster": true
   },
   "pins": {
@@ -17,6 +17,13 @@
 
 
   },
+
+  "electrovalves": [
+  { "enabled": true,  "pin": 32 },
+  { "enabled": false, "pin": 33 },
+  { "enabled": true,  "pin": 25 },
+  { "enabled": false, "pin": 26 }
+],
 
   "sensors_config": {
     "temperature_sensor": {
@@ -53,9 +60,9 @@
     "soil_wet": 1200
   },
   "network": {
-    "master_mac": "80:B5:4E:C3:23:D4",
-    "enableESPNow": false,
-    "enableLora": true,
+    "master_mac": "80:B5:4E:D9:6A:88",
+    "enableESPNow": true,
+    "enableLora": false,
     "lora_freq_mhz": 868,
     "lora_node_addr": 2,
     "lora_peer_addr": 1,
@@ -72,9 +79,9 @@
     "topic_commands_down": "farm/commands/master/set"
   },
   "logic": {
-    "humidity_thresholdMin": 20.0,
-    "humidity_thresholdMax": 80.0,
-    "defaultIrrigationDurationMs": 45000,
+    "humidity_thresholdMin": 30.0,
+    "humidity_thresholdMax": 70.0,
+    "defaultIrrigationDurationMs": 180000,
 
   "send_times": [
     {

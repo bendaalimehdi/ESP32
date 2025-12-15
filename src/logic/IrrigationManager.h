@@ -3,8 +3,7 @@
 #include "actuators/Electrovanne.h"
 #include <Arduino.h> // Pour Serial
 
-// Définit que nous gérons 5 vannes, correspondant à MAX_SOIL_SENSORS
-#define MAX_MANAGED_VALVES 5 
+#define MAX_VALVES 20 
 
 class IrrigationManager {
 public:
@@ -13,7 +12,7 @@ public:
      * @param logic La configuration logique (seuils, durée)
      * @param valves Un tableau de pointeurs vers les 5 objets Electrovanne
      */
-    IrrigationManager(const ConfigLogic& logic, Electrovanne* valves[MAX_MANAGED_VALVES]);
+    IrrigationManager(const ConfigLogic& logic, Electrovanne* valves[MAX_VALVES]);
 
     /**
      * @brief Traite une donnée d'humidité reçue.
@@ -25,5 +24,5 @@ public:
 
 private:
     const ConfigLogic& _logic;
-    Electrovanne* _valves[MAX_MANAGED_VALVES];
+    Electrovanne* _valves[MAX_VALVES];
 };

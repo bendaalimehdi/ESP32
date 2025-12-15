@@ -4,6 +4,8 @@
 #define MAX_PAYLOAD_SIZE 250
 #define MAX_SOIL_SENSORS 5 // Définit une limite max de capteurs d'humidité
 #define MAX_SEND_TIMES 200
+#define MAX_ELECTROVALVES 20
+
 
 // Structure pour les pins
 struct ConfigPins {
@@ -50,6 +52,12 @@ struct ConfigSensors {
     ConfigSensorSoil soil_sensors[MAX_SOIL_SENSORS];
     uint8_t num_soil_sensors; 
 };
+
+struct ConfigElectrovalve {
+    bool enabled;
+    uint8_t pin;
+};
+
 // FIN NOUVELLES STRUCTURES
 
 // Structure pour le réseau
@@ -96,6 +104,8 @@ struct Config {
     ConfigSensors sensors; 
     ConfigNetwork network;
     ConfigLogic logic;
+    ConfigElectrovalve electrovalves[MAX_ELECTROVALVES];
+    uint8_t num_electrovalves;
   
 };
 
